@@ -1,7 +1,7 @@
 ---
 title: "Data analysis fit of growth references to height, weight, BMI, and head circumference in SwissPedGrowth"
 author: "Lorenz Leuenberger"
-date: "2026-07-14"
+date: "2026-07-31"
 
 ---
 
@@ -205,33 +205,24 @@ data_head <- data_head_included
 
 rm(data_participant_included, data_diagnoses_included, data_height_clean_included, data_weight_clean_included, data_bmi_included, data_head_included)
 
-# import interpolated LMS-values from braegger
-interpolated_braegger_height <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_braegger_height.csv"))
-interpolated_braegger_weight <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_braegger_weight.csv"))
-interpolated_braegger_bmi <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_braegger_bmi.csv"))
-interpolated_braegger_head_circumference <- read.csv(here("data", "raw", "Interpolated-growth-references", "interpolated_braegger_head_circumference.csv"))
-braegger_length <- read_csv(here("data","raw","Interpolated-growth-references","braegger_length.csv"))
+# import interpolated LMS-values from ch_who_2011
+interpolated_ch_who_2011_height <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_braegger_height.csv"))
+interpolated_ch_who_2011_weight <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_braegger_weight.csv"))
+interpolated_ch_who_2011_bmi <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_braegger_bmi.csv"))
+interpolated_ch_who_2011_head_circumference <- read.csv(here("data", "raw", "Interpolated-growth-references", "interpolated_braegger_head_circumference.csv"))
+ch_who_2011_length <- read_csv(here("data","raw","Interpolated-growth-references","braegger_length.csv"))
 
-# import interpolated LMS-values from eiholzer
-interpolated_eiholzer_height <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_eiholzer_height_25.csv"))
-interpolated_eiholzer_weight <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_eiholzer_weight_25.csv"))
-interpolated_eiholzer_bmi <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_eiholzer_bmi_25.csv"))
+interpolated_ch_who_2011_height_length <- interpolated_ch_who_2011_height |> 
+  bind_rows(ch_who_2011_length)
 
-# import interpolated LMS-values from prader
-interpolated_prader_height <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_prader_height.csv"))
-interpolated_prader_weight <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_prader_weight.csv"))
-interpolated_prader_head_circumference <- read.csv(here("data", "raw", "Interpolated-growth-references", "interpolated_prader_head_circumference.csv"))
-interpolated_prader_length <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_prader_length.csv"))
-
-# import interpolated LMS-values from sempe
-interpolated_sempe_height <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_sempe_height.csv"))
-interpolated_sempe_weight <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_sempe_weight.csv"))
-interpolated_sempe_head_circumference <- read.csv(here("data", "raw", "Interpolated-growth-references", "interpolated_sempe_hc.csv"))
-interpolated_sempe_length <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_sempe_length.csv"))
+# import interpolated LMS-values from swiss_2026
+interpolated_swiss_2026_height <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_swiss_2026_height.csv"))
+interpolated_swiss_2026_weight <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_swiss_2026_weight.csv"))
+interpolated_swiss_2026_bmi <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_swiss_2026_bmi.csv"))
+interpolated_swiss_2026_head_circumference <- read.csv(here("data", "raw", "Interpolated-growth-references", "interpolated_swiss_2026_hc.csv"))
 
 
-# import interpolated LMS-values from IOTF
-interpolated_iotf_bmi <- read_csv(here("data","raw","Interpolated-growth-references","interpolated_iotf_bmi.csv"))
+
 
 
 # genpop
@@ -946,157 +937,6 @@ data_bmi <- data_bmi |>
 
 ## Calculate z-scores
 
-#### Check interpolated growth references
-
-Height
-
-```{r}
-interpolated_braegger_height_length <- interpolated_braegger_height |> 
-  bind_rows(braegger_length)
-
-interpolated_prader_height_length <- interpolated_prader_height |> 
-  bind_rows(interpolated_prader_length |> filter(age_days <= 1094) |> mutate(M = case_when(age_days > 730 ~ M - 0.7,
-                                                                              age_days <= 730 ~ M)))
-
-interpolated_sempe_height_length <- interpolated_sempe_height |> 
-  bind_rows(interpolated_sempe_length |> filter(age_days <= 912) |> mutate(M = case_when(age_days > 730 ~ M - 0.7,
-                                                                              age_days <= 730 ~ M)))
-
-```
-
-```{r}
-
-interpolated_braegger_height_length |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_prader_height_length |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_height_length |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = M, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-interpolated_braegger_height_length |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_prader_height_length |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_height_length |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = S, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-
-interpolated_braegger_height_length |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_prader_height_length |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_height_length |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = L, color = reference)) +
-  geom_line() +
-  facet_wrap(~sex)
-
-
-```
-
-Weight
-
-```{r}
-
-interpolated_braegger_weight |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_weight |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_prader_weight |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_weight |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = M, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-interpolated_braegger_weight |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_weight |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_prader_weight |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_weight |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = S, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-
-interpolated_braegger_weight |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_weight |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_prader_weight |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_weight |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = L, color = reference)) +
-  geom_line() +
-  facet_wrap(~sex)
-
-
-```
-
-
-head_circumference
-
-```{r}
-
-interpolated_braegger_head_circumference |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_prader_head_circumference |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_head_circumference |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = M, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-interpolated_braegger_head_circumference |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_prader_head_circumference |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_head_circumference |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = S, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-
-interpolated_braegger_head_circumference |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_prader_head_circumference |> mutate(reference = "Prader")) |> 
-  bind_rows(interpolated_sempe_head_circumference |> mutate(reference = "Sempé")) |> 
-  ggplot(aes(x = age_days, y = L, color = reference)) +
-  geom_line() +
-  facet_wrap(~sex)
-
-
-```
-
-BMI
-
-```{r}
-
-interpolated_braegger_bmi |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_bmi |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_iotf_bmi |> mutate(reference = "IOTF")) |> 
-  ggplot(aes(x = age_days, y = M, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-interpolated_braegger_bmi |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_bmi |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_iotf_bmi |> mutate(reference = "IOTF")) |> 
-  ggplot(aes(x = age_days, y = S, color = reference)) +
-  geom_point(size = 0.2) +
-  facet_wrap(~sex)
-
-
-interpolated_braegger_bmi |> 
-  mutate(reference = "Braegger") |> 
-  bind_rows(interpolated_eiholzer_bmi |> mutate(reference = "Eiholzer")) |> 
-  bind_rows(interpolated_iotf_bmi |> mutate(reference = "IOTF")) |> 
-  ggplot(aes(x = age_days, y = L, color = reference)) +
-  geom_line() +
-  facet_wrap(~sex)
-
-
-```
-
 I use tables of interpolated LMS-values to calculate z-scores of height, weight and BMI.
 
 I define a function to calculate z-scores. I use the correction method of the WHO for z-scores <-3 and >+3, see [here](https://cdn.who.int/media/docs/default-source/child-growth/growth-reference-5-19-years/computation.pdf).
@@ -1140,8 +980,7 @@ z_score_calc_corr = function(L,M,S,parameter){
 }
 ```
 
-
-#### Braegger references
+#### CH-WHO 2011 references
 
 Height
 
@@ -1153,14 +992,14 @@ Height
 # add L,M,S values of height reference to each individual
 data_height_clean <- data_height_clean |> 
   mutate(age_days_z = round(age_days_height)) |> 
-  left_join(y=interpolated_braegger_height_length, by = c('age_days_z' = "age_days",'sex'))
+  left_join(y=interpolated_ch_who_2011_height_length, by = c('age_days_z' = "age_days",'sex'))
 
 
 # calculate height z scores with correction
 data_height_clean <- data_height_clean %>%
   rowwise() %>% 
-  mutate(z_height_braegger=z_score_calc_corr(L,M,S,height_cm)) %>% 
-  mutate(diff_height_braegger = height_cm - M) %>% 
+  mutate(z_height_ch_who_2011=z_score_calc_corr(L,M,S,height_cm)) %>% 
+  mutate(diff_height_ch_who_2011 = height_cm - M) %>% 
   ungroup()
 
 # delete LMS values
@@ -1180,14 +1019,14 @@ Weight
 # add L,M,S values of weight reference to each individual
 data_weight_clean <- data_weight_clean |> 
   mutate(age_days_z = round(age_days_weight)) |> 
-  left_join(y=interpolated_braegger_weight, by = c('age_days_z' = "age_days",'sex'))
+  left_join(y=interpolated_ch_who_2011_weight, by = c('age_days_z' = "age_days",'sex'))
 
 
 # calculate weight z scores with correction
 data_weight_clean <- data_weight_clean %>%
   rowwise() %>% 
-  mutate(z_weight_braegger=z_score_calc_corr(L,M,S,weight_kg)) %>% 
-  mutate(diff_weight_braegger = weight_kg - M) %>% 
+  mutate(z_weight_ch_who_2011=z_score_calc_corr(L,M,S,weight_kg)) %>% 
+  mutate(diff_weight_ch_who_2011 = weight_kg - M) %>% 
   ungroup()
 
 # delete LMS values
@@ -1207,14 +1046,14 @@ HC
 # add L,M,S values of head reference to each individual
 data_head <- data_head |> 
   mutate(age_days_z = round(age_days_circumference)) |> 
-  left_join(y=interpolated_braegger_head_circumference, by = c('age_days_z' = "age_days",'sex'))
+  left_join(y=interpolated_ch_who_2011_head_circumference, by = c('age_days_z' = "age_days",'sex'))
 
 
 # calculate head z scores with correction
 data_head <- data_head %>%
   rowwise() %>% 
-  mutate(z_head_braegger=z_score_calc_corr(L,M,S,head_cm)) %>% 
-  mutate(diff_head_braegger = head_cm - M) %>% 
+  mutate(z_head_ch_who_2011=z_score_calc_corr(L,M,S,head_cm)) %>% 
+  mutate(diff_head_ch_who_2011 = head_cm - M) %>% 
   ungroup()
 
 # delete LMS values
@@ -1234,14 +1073,14 @@ BMI
 # add L,M,S values of bmi reference to each individual
 data_bmi <- data_bmi |> 
   mutate(age_days_z = round(age_days_bmi)) |> 
-  left_join(y=interpolated_braegger_bmi, by = c('age_days_z' = "age_days",'sex'))
+  left_join(y=interpolated_ch_who_2011_bmi, by = c('age_days_z' = "age_days",'sex'))
 
 
 # calculate bmi z scores with correction
 data_bmi <- data_bmi %>%
   rowwise() %>% 
-  mutate(z_bmi_braegger=z_score_calc_corr(L,M,S,bmi)) %>% 
-  mutate(diff_bmi_braegger = bmi - M) %>% 
+  mutate(z_bmi_ch_who_2011=z_score_calc_corr(L,M,S,bmi)) %>% 
+  mutate(diff_bmi_ch_who_2011 = bmi - M) %>% 
   ungroup()
 
 # delete LMS values
@@ -1252,7 +1091,7 @@ data_bmi <- data_bmi %>%
 
 ```
 
-#### Eiholzer references
+#### Swiss 2026 references
 
 Height
 
@@ -1263,14 +1102,14 @@ Height
 # add L,M,S values of height reference to each individual
 data_height_clean <- data_height_clean |> 
   mutate(age_days_z = round(age_days_height)) |> 
-  left_join(y=interpolated_eiholzer_height, by = c('age_days_z' = "age_days",'sex'))
+  left_join(y=interpolated_swiss_2026_height, by = c('age_days_z' = "age_days",'sex'))
 
 
 # calculate height z scores with correction
 data_height_clean <- data_height_clean %>%
   rowwise() %>% 
-  mutate(z_height_eiholzer=z_score_calc_corr(L,M,S,height_cm)) %>% 
-  mutate(diff_height_eiholzer = height_cm - M) %>% 
+  mutate(z_height_swiss_2026=z_score_calc_corr(L,M,S,height_cm)) %>% 
+  mutate(diff_height_swiss_2026 = height_cm - M) %>% 
   ungroup()
 
 # delete LMS values
@@ -1290,14 +1129,14 @@ Weight
 # add L,M,S values of weight reference to each individual
 data_weight_clean <- data_weight_clean |> 
   mutate(age_days_z = round(age_days_weight)) |> 
-  left_join(y=interpolated_eiholzer_weight, by = c('age_days_z' = "age_days",'sex'))
+  left_join(y=interpolated_swiss_2026_weight, by = c('age_days_z' = "age_days",'sex'))
 
 
 # calculate weight z scores with correction
 data_weight_clean <- data_weight_clean %>%
   rowwise() %>% 
-  mutate(z_weight_eiholzer=z_score_calc_corr(L,M,S,weight_kg)) %>% 
-  mutate(diff_weight_eiholzer = weight_kg - M) %>% 
+  mutate(z_weight_swiss_2026=z_score_calc_corr(L,M,S,weight_kg)) %>% 
+  mutate(diff_weight_swiss_2026 = weight_kg - M) %>% 
   ungroup()
 
 # delete LMS values
@@ -1305,6 +1144,34 @@ exclude_col = c("L","M","S")
 
 data_weight_clean <- data_weight_clean %>% 
   dplyr::select(-exclude_col)
+```
+
+
+HC
+
+```{r}
+#| output: false
+#| warning: false
+
+# add L,M,S values of head reference to each individual
+data_head <- data_head |> 
+  mutate(age_days_z = round(age_days_circumference)) |> 
+  left_join(y=interpolated_swiss_2026_head_circumference, by = c('age_days_z' = "age_days",'sex'))
+
+
+# calculate head z scores with correction
+data_head <- data_head %>%
+  rowwise() %>% 
+  mutate(z_head_swiss_2026=z_score_calc_corr(L,M,S,head_cm)) %>% 
+  mutate(diff_head_swiss_2026 = head_cm - M) %>% 
+  ungroup()
+
+# delete LMS values
+exclude_col = c("L","M","S")
+
+data_head <- data_head %>% 
+  dplyr::select(-exclude_col)
+
 ```
 
 BMI
@@ -1316,210 +1183,14 @@ BMI
 # add L,M,S values of bmi reference to each individual
 data_bmi <- data_bmi |> 
   mutate(age_days_z = round(age_days_bmi)) |> 
-  left_join(y=interpolated_eiholzer_bmi, by = c('age_days_z' = "age_days",'sex'))
+  left_join(y=interpolated_swiss_2026_bmi, by = c('age_days_z' = "age_days",'sex'))
 
 
 # calculate bmi z scores with correction
 data_bmi <- data_bmi %>%
   rowwise() %>% 
-  mutate(z_bmi_eiholzer=z_score_calc_corr(L,M,S,bmi)) %>% 
-  mutate(diff_bmi_eiholzer = bmi - M) %>% 
-  ungroup()
-
-# delete LMS values
-exclude_col = c("L","M","S")
-
-data_bmi <- data_bmi %>% 
-  dplyr::select(-exclude_col)
-
-```
-
-#### Prader references
-
-Height
-
-```{r}
-#| output: false
-#| warning: false
-
-
-# add L,M,S values of height reference to each individual
-data_height_clean <- data_height_clean |> 
-  mutate(age_days_z = round(age_days_height)) |> 
-  left_join(y=interpolated_prader_height_length, by = c('age_days_z' = "age_days",'sex'))
-
-
-# calculate height z scores with correction
-data_height_clean <- data_height_clean %>%
-  rowwise() %>% 
-  mutate(z_height_prader=z_score_calc_corr(L,M,S,height_cm)) %>% 
-  mutate(diff_height_prader = height_cm - M) %>% 
-  ungroup()
-
-# delete LMS values
-exclude_col = c("L","M","S")
-
-data_height_clean <- data_height_clean %>% 
-  dplyr::select(-exclude_col)
-
-```
-
-Weight
-
-```{r}
-#| output: false
-#| warning: false
-
-# add L,M,S values of weight reference to each individual
-data_weight_clean <- data_weight_clean |> 
-  mutate(age_days_z = round(age_days_weight)) |> 
-  left_join(y=interpolated_prader_weight, by = c('age_days_z' = "age_days",'sex'))
-
-
-# calculate weight z scores with correction
-data_weight_clean <- data_weight_clean %>%
-  rowwise() %>% 
-  mutate(z_weight_prader=z_score_calc_corr(L,M,S,weight_kg)) %>% 
-  mutate(diff_weight_prader = weight_kg - M) %>% 
-  ungroup()
-
-# delete LMS values
-exclude_col = c("L","M","S")
-
-data_weight_clean <- data_weight_clean %>% 
-  dplyr::select(-exclude_col)
-```
-
-HC
-
-```{r}
-#| output: false
-#| warning: false
-
-# add L,M,S values of head reference to each individual
-data_head <- data_head |> 
-  mutate(age_days_z = round(age_days_circumference)) |> 
-  left_join(y=interpolated_prader_head_circumference, by = c('age_days_z' = "age_days",'sex'))
-
-
-# calculate head z scores with correction
-data_head <- data_head %>%
-  rowwise() %>% 
-  mutate(z_head_prader=z_score_calc_corr(L,M,S,head_cm)) %>% 
-  mutate(diff_head_prader = head_cm - M) %>% 
-  ungroup()
-
-# delete LMS values
-exclude_col = c("L","M","S")
-
-data_head <- data_head %>% 
-  dplyr::select(-exclude_col)
-
-```
-
-
-#### Sempe references
-
-Height
-
-```{r}
-#| output: false
-#| warning: false
-
-
-# add L,M,S values of height reference to each individual
-data_height_clean <- data_height_clean |> 
-  mutate(age_days_z = round(age_days_height)) |> 
-  left_join(y=interpolated_sempe_height_length, by = c('age_days_z' = "age_days",'sex'))
-
-
-# calculate height z scores with correction
-data_height_clean <- data_height_clean %>%
-  rowwise() %>% 
-  mutate(z_height_sempe=z_score_calc_corr(L,M,S,height_cm)) %>% 
-  mutate(diff_height_sempe = height_cm - M) %>% 
-  ungroup()
-
-# delete LMS values
-exclude_col = c("L","M","S")
-
-data_height_clean <- data_height_clean %>% 
-  dplyr::select(-exclude_col)
-
-```
-
-Weight
-
-```{r}
-#| output: false
-#| warning: false
-
-# add L,M,S values of weight reference to each individual
-data_weight_clean <- data_weight_clean |> 
-  mutate(age_days_z = round(age_days_weight)) |> 
-  left_join(y=interpolated_sempe_weight, by = c('age_days_z' = "age_days",'sex'))
-
-
-# calculate weight z scores with correction
-data_weight_clean <- data_weight_clean %>%
-  rowwise() %>% 
-  mutate(z_weight_sempe=z_score_calc_corr(L,M,S,weight_kg)) %>% 
-  mutate(diff_weight_sempe = weight_kg - M) %>% 
-  ungroup()
-
-# delete LMS values
-exclude_col = c("L","M","S")
-
-data_weight_clean <- data_weight_clean %>% 
-  dplyr::select(-exclude_col)
-```
-
-HC
-
-```{r}
-#| output: false
-#| warning: false
-
-# add L,M,S values of head reference to each individual
-data_head <- data_head |> 
-  mutate(age_days_z = round(age_days_circumference)) |> 
-  left_join(y=interpolated_sempe_head_circumference, by = c('age_days_z' = "age_days",'sex'))
-
-
-# calculate head z scores with correction
-data_head <- data_head %>%
-  rowwise() %>% 
-  mutate(z_head_sempe=z_score_calc_corr(L,M,S,head_cm)) %>% 
-  mutate(diff_head_sempe = head_cm - M) %>% 
-  ungroup()
-
-# delete LMS values
-exclude_col = c("L","M","S")
-
-data_head <- data_head %>% 
-  dplyr::select(-exclude_col)
-
-```
-
-#### IOTF
-
-BMI
-
-```{r}
-#| output: false
-#| warning: false
-
-# add L,M,S values of bmi reference to each individual
-data_bmi <- data_bmi |> 
-  mutate(age_days_z = round(age_days_bmi)) |> 
-  left_join(y=interpolated_iotf_bmi, by = c('age_days_z' = "age_days",'sex'))
-
-
-# calculate bmi z scores with correction
-data_bmi <- data_bmi %>%
-  rowwise() %>% 
-  mutate(z_bmi_iotf=z_score_calc_corr(L,M,S,bmi)) %>% 
-  mutate(diff_bmi_iotf = bmi - M) %>% 
+  mutate(z_bmi_swiss_2026=z_score_calc_corr(L,M,S,bmi)) %>% 
+  mutate(diff_bmi_swiss_2026 = bmi - M) %>% 
   ungroup()
 
 # delete LMS values
@@ -1536,7 +1207,7 @@ data_bmi <- data_bmi %>%
 Inclusion criteria of SwissPedGrowth (already applied)
 
 Inclusion criteria for this analysis:
-•	Children who had a plausible height, weight, BMI or head circumference measurement between 0 to 18 years.
+•	Children who had a plausible height, weight, BMI or head circumference measurement between 0 to <18 years.
 
 Exclude:
 •	AND excluded implausible height, weight, BMI or head circumference measurements.
@@ -1840,6 +1511,14 @@ data_participant_head_pop1 <- data_participant |>
 
 data_participant_head_pop2 <- data_participant |> 
   filter(include_head_analysis_pop2 == "Include")
+
+
+data_participant |> nrow()
+
+data_participant |> filter(include_height_analysis_pop1 == "Include" | include_weight_analysis_pop1 == "Include" | include_bmi_analysis_pop1 == "Include" | include_head_analysis_pop1 == "include") |> nrow()
+
+data_participant |> filter(include_height_analysis_pop2 == "Include" | include_weight_analysis_pop2 == "Include" | include_bmi_analysis_pop2 == "Include" | include_head_analysis_pop2 == "include") |> nrow()
+
 
 ```
 
@@ -2550,7 +2229,7 @@ love_plot_height_pop2 <- standardized_difference_table_height_pop2 |>
   ggplot(aes(y = Group, x = abs(SPD), colour = weighting, alpha = transparency))+
   geom_vline(xintercept = 0.1, linewidth = 0.5, linetype = "dashed")+
   geom_point(size = 2)+
-  scale_x_continuous(name = "Standardized difference",
+  scale_x_continuous(name = "Standardised difference",
                      expand = c(0.02,0), limits = c(0, 1.05), breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0))+
   scale_y_discrete(labels = function(x) parse(text = x), expand = c(0.01,0))+
   scale_colour_manual(breaks = c("Before weighting", "After weighting"), values = c(unibeRed(), unibeIce()))+
@@ -2894,7 +2573,7 @@ love_plot_weight_pop2 <- standardized_difference_table_weight_pop2 |>
   ggplot(aes(y = Group, x = abs(SPD), colour = weighting, alpha = transparency))+
   geom_vline(xintercept = 0.1, linewidth = 0.5, linetype = "dashed")+
   geom_point(size = 2)+
-  scale_x_continuous(name = "Standardized difference",
+  scale_x_continuous(name = "Standardised difference",
                      expand = c(0.02,0), limits = c(0, 1.05), breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0))+
   scale_y_discrete(labels = function(x) parse(text = x), expand = c(0.01,0))+
   scale_colour_manual(breaks = c("Before weighting", "After weighting"), values = c(unibeRed(), unibeIce()))+
@@ -3234,7 +2913,7 @@ love_plot_head_pop2 <- standardized_difference_table_head_pop2 |>
   ggplot(aes(y = Group, x = abs(SPD), colour = weighting, alpha = transparency))+
   geom_vline(xintercept = 0.1, linewidth = 0.5, linetype = "dashed")+
   geom_point(size = 2)+
-  scale_x_continuous(name = "Standardized difference",
+  scale_x_continuous(name = "Standardised difference",
                      expand = c(0.02,0), limits = c(0, 1.05), breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0))+
   scale_y_discrete(labels = function(x) parse(text = x), expand = c(0.01,0))+
   scale_colour_manual(breaks = c("Before weighting", "After weighting"), values = c(unibeRed(), unibeIce()))+
@@ -3283,7 +2962,7 @@ data_participant_bmi_pop2 |>
                             all_continuous() ~ 1))
 
 
-data_general_population_bmi
+data_general_population
 
 ```
 
@@ -3575,7 +3254,7 @@ love_plot_bmi_pop2 <- standardized_difference_table_bmi_pop2 |>
   ggplot(aes(y = Group, x = abs(SPD), colour = weighting, alpha = transparency))+
   geom_vline(xintercept = 0.1, linewidth = 0.5, linetype = "dashed")+
   geom_point(size = 2)+
-  scale_x_continuous(name = "Standardized difference",
+  scale_x_continuous(name = "Standardised difference",
                      expand = c(0.02,0), limits = c(0, 1.05), breaks = c(0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0))+
   scale_y_discrete(labels = function(x) parse(text = x), expand = c(0.01,0))+
   scale_colour_manual(breaks = c("Before weighting", "After weighting"), values = c(unibeRed(), unibeIce()))+
@@ -3709,9 +3388,9 @@ data_participant_bmi_pop1 |>
 
 See above during the creation of the analysis weights.
 
-## Aim 1: Fit of growth references
+# Aim 1: Fit of growth references
 
-### Table 2: Summary of mean z scores
+## Table 2: Summary of mean z scores
 
 I calculate means of the height, weight, HC, and BMI z-scores based on the different growth references. I also calculate 95% confidence intervals.
 
@@ -3721,27 +3400,27 @@ Height
 
 svydesign(id = ~participant_id, data = data_height_pop1, weights = ~analysis_weight) |> 
   as_survey() |> 
-  select(z_height_braegger, z_height_eiholzer, z_height_prader, z_height_sempe) |>
+  select(z_height_ch_who_2011, z_height_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 
 svydesign(id = ~participant_id, data = data_height_pop2, weights = ~stabilized_genpop_analysis_weight) |> 
   as_survey() |> 
-  select(z_height_braegger, z_height_eiholzer, z_height_prader, z_height_sempe) |>
+  select(z_height_ch_who_2011, z_height_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 ```
@@ -3753,27 +3432,27 @@ Weight
 
 svydesign(id = ~participant_id, data = data_weight_pop1, weights = ~analysis_weight) |> 
   as_survey() |> 
-  select(z_weight_braegger, z_weight_eiholzer, z_weight_prader, z_weight_sempe) |>
+  select(z_weight_ch_who_2011, z_weight_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 
 svydesign(id = ~participant_id, data = data_weight_pop2, weights = ~stabilized_genpop_analysis_weight) |> 
   as_survey() |> 
-  select(z_weight_braegger, z_weight_eiholzer, z_weight_prader, z_weight_sempe) |>
+  select(z_weight_ch_who_2011, z_weight_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 ```
@@ -3785,32 +3464,30 @@ HC
 
 svydesign(id = ~participant_id, data = data_head_pop1, weights = ~analysis_weight) |> 
   as_survey() |> 
-  select(z_head_braegger, z_head_prader, z_head_sempe) |>
+  select(z_head_ch_who_2011, z_head_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 
 svydesign(id = ~participant_id, data = data_head_pop2, weights = ~stabilized_genpop_analysis_weight) |> 
   as_survey() |> 
-  select(z_head_braegger, z_head_prader, z_head_sempe) |>
+  select(z_head_ch_who_2011, z_head_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 
-data_head_pop1 |> filter(is.na(z_head_prader)) |> nrow()
-data_head_pop2 |> filter(is.na(z_head_prader)) |> nrow()
 
 
 ```
@@ -3821,39 +3498,37 @@ BMI
 
 svydesign(id = ~participant_id, data = data_bmi_pop1, weights = ~analysis_weight) |> 
   as_survey() |> 
-  select(z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf) |>
+  select(z_bmi_ch_who_2011, z_bmi_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 
 svydesign(id = ~participant_id, data = data_bmi_pop2, weights = ~stabilized_genpop_analysis_weight) |> 
   as_survey() |> 
-  select(z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf) |>
+  select(z_bmi_ch_who_2011, z_bmi_swiss_2026) |>
   tbl_svysummary(type = list(all_continuous() ~ "continuous2"),
               statistic = list(all_continuous2() ~ c("{mean} ({sd})")),
               missing = "ifany",
               missing_stat = "{N_miss} ({p_miss}%)",
               percent = "column",
               digits = list(all_categorical() ~ 0,
-                            all_continuous() ~ 2)) |> 
+                            all_continuous() ~ 4)) |> 
   add_ci()
 
 
-  data_bmi_pop1 |> filter(is.na(z_bmi_iotf)) |> nrow()
-  data_bmi_pop2 |> filter(is.na(z_bmi_iotf)) |> nrow()
-  data_bmi_pop1 |> filter(is.na(z_bmi_eiholzer)) |> nrow()
-  data_bmi_pop2 |> filter(is.na(z_bmi_eiholzer)) |> nrow()
+  data_bmi_pop1 |> filter(is.na(z_bmi_swiss_2026)) |> nrow()
+  data_bmi_pop2 |> filter(is.na(z_bmi_swiss_2026)) |> nrow()
 
 ```
 
 
-### Figure 1: Density plot pop1 vs pop2
+## Figure 1: Density plot pop1 vs pop2
 
 Height pop 1 vs pop 2
 
@@ -3871,14 +3546,14 @@ density_height_pop1_pop2 <- ggplot(data_height_pop1)+
                 n = 1000, linewidth=0.75,
                 aes(color="SND", linetype = "SND"))+
   stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 3,
-               aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", x = z_height_eiholzer))+
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", x = z_height_swiss_2026))+
   stat_density(data = data_height_pop1,
                geom = "line", position = "identity", linewidth=0.75, adjust = 3,
-               aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", x = z_height_braegger))+
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", x = z_height_ch_who_2011))+
   stat_density(data = data_height_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
-               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "Swiss 2026", x = z_height_eiholzer))+
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "Swiss 2026", x = z_height_swiss_2026))+
   stat_density(data = data_height_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
-               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "CH-WHO 2011", x = z_height_braegger))+
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "CH-WHO 2011", x = z_height_ch_who_2011))+
   geom_vline(aes(xintercept=0),
              color="black", linetype="dashed", size=0.5)+
   geom_vline(aes(xintercept=-0.5),
@@ -3937,14 +3612,14 @@ density_weight_pop1_pop2 <- ggplot(data_weight_pop1)+
                 n = 1000, linewidth=0.75,
                 aes(color="SND", linetype = "SND"))+
   stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 3,
-               aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", x = z_weight_eiholzer))+
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", x = z_weight_swiss_2026))+
   stat_density(data = data_weight_pop1,
                geom = "line", position = "identity", linewidth=0.75, adjust = 3,
-               aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", x = z_weight_braegger))+
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", x = z_weight_ch_who_2011))+
   stat_density(data = data_weight_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
-               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "Swiss 2026", x = z_weight_eiholzer))+
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "Swiss 2026", x = z_weight_swiss_2026))+
   stat_density(data = data_weight_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
-               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "CH-WHO 2011", x = z_weight_braegger))+
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "CH-WHO 2011", x = z_weight_ch_who_2011))+
   geom_vline(aes(xintercept=0),
              color="black", linetype="dashed", size=0.5)+
   geom_vline(aes(xintercept=-0.5),
@@ -4004,14 +3679,14 @@ density_bmi_pop1_pop2 <- ggplot(data_bmi_pop1)+
                 n = 1000, linewidth=0.75,
                 aes(color="SND", linetype = "SND"))+
   stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 3,
-               aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", x = z_bmi_eiholzer))+
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", x = z_bmi_swiss_2026))+
   stat_density(data = data_bmi_pop1,
                geom = "line", position = "identity", linewidth=0.75, adjust = 3,
-               aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", x = z_bmi_braegger))+
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", x = z_bmi_ch_who_2011))+
   stat_density(data = data_bmi_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
-               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "Swiss 2026", x = z_bmi_eiholzer))+
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "Swiss 2026", x = z_bmi_swiss_2026))+
   stat_density(data = data_bmi_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
-               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "CH-WHO 2011", x = z_bmi_braegger))+
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "CH-WHO 2011", x = z_bmi_ch_who_2011))+
   geom_vline(aes(xintercept=0),
              color="black", linetype="dashed", size=0.5)+
   geom_vline(aes(xintercept=-0.5),
@@ -4066,14 +3741,19 @@ ggtext_size <- function(base_size, ratio = 0.8) {
 
 # head
 
-density_head_pop1_pop2 <- ggplot(data_head_pop1, aes(x=z_head_braegger))+
+density_head_pop1_pop2 <- ggplot(data_head_pop1)+
   stat_function(fun=dnorm,
                 n = 1000, linewidth=0.75,
                 aes(color="SND", linetype = "SND"))+
   stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 3,
-               aes(linetype="'All children' sample", weight = analysis_weight, color = "'All children' sample"))+
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", x = z_head_swiss_2026))+
+  stat_density(data = data_head_pop1,
+               geom = "line", position = "identity", linewidth=0.75, adjust = 3,
+               aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", x = z_head_ch_who_2011))+
   stat_density(data = data_head_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
-               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "'Normal growth and weighted' subsample"))+
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "Swiss 2026", x = z_head_swiss_2026))+
+  stat_density(data = data_head_pop2, geom = "line", position = "identity", linewidth=0.75, adjust = 2,
+               aes(linetype="'Normal growth and weighted' subsample", weight = stabilized_genpop_analysis_weight, color = "CH-WHO 2011", x = z_head_ch_who_2011))+
   geom_vline(aes(xintercept=0),
              color="black", linetype="dashed", size=0.5)+
   geom_vline(aes(xintercept=-0.5),
@@ -4081,8 +3761,8 @@ density_head_pop1_pop2 <- ggplot(data_head_pop1, aes(x=z_head_braegger))+
   geom_vline(aes(xintercept=0.5),
              color="black", linetype="dashed", linewidth=0.25)+
   scale_color_manual(name = NULL,
-                     breaks = c("'All children' sample", "'Normal growth and weighted' subsample", "SND"),
-                     values = c(unibeRed(), unibeRed(), "black"))+
+                     breaks = c("Swiss 2026", "CH-WHO 2011", "SND"),
+                     values = c(unibeMint(), unibeRed(), "black"))+
   scale_linetype_manual(name = NULL,
                         breaks = c("'All children' sample", "'Normal growth and weighted' subsample", "SND"),
                         values = c("solid", "dashed", "solid"))+
@@ -4120,7 +3800,7 @@ ggsave(filename=file.path(here("output","figures","density_head_pop1_pop2.svg"))
 ```{r}
 
 
-legend_plot <- ggplot(data_height_pop1, aes(x=z_height_eiholzer))+
+legend_plot <- ggplot(data_height_pop1, aes(x=z_height_swiss_2026))+
   stat_function(fun=dnorm,
                 n = 1000, linewidth=0.75,
                 aes(color="SND"))+
@@ -4184,551 +3864,7 @@ ggsave(filename=file.path(here("output","figures","density-plot-z-scores_pop1_po
 ```
 
 
-
-#### Alternative Figure: Density all growth references pop1
-
-Height
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# Height
-
-plot_data <- data_height_pop1 |> 
-  dplyr::select(height_id, z_height_braegger, z_height_eiholzer, z_height_prader, z_height_sempe, analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_height_braegger",
-         "Swiss 2026" = "z_height_eiholzer",
-         "Sempé 1979" = "z_height_sempe",
-         "Prader 1989" = "z_height_prader")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_height", cols = c("CH-WHO 2011", "Swiss 2026", "Sempé 1979", "Prader 1989"))
-
-density_height_pop1 <- ggplot(plot_data, aes(x=z_height))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, aes(color=growth_reference, weight = analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026", "SND"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint(), "black"))+
-  coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Height z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_height_pop1
-
-ggsave(filename=file.path(here("output","figures","density_height_pop1.svg")),density_height_pop1,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-
-
-Weight
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# weight
-
-plot_data <- data_weight_pop1 |> 
-  dplyr::select(weight_id, z_weight_braegger, z_weight_eiholzer, z_weight_prader, z_weight_sempe, analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_weight_braegger",
-         "Swiss 2026" = "z_weight_eiholzer",
-         "Sempé 1979" = "z_weight_sempe",
-         "Prader 1989" = "z_weight_prader")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_weight", cols = c("CH-WHO 2011", "Swiss 2026", "Sempé 1979", "Prader 1989"))
-
-density_weight_pop1 <- ggplot(plot_data, aes(x=z_weight))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, aes(color=growth_reference, weight = analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026", "SND"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint(), "black"))+
-  coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Weight z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_weight_pop1
-
-ggsave(filename=file.path(here("output","figures","density_weight_pop1.svg")),density_weight_pop1,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-
-Head circumference
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# head
-
-plot_data <- data_head_pop1 |> 
-  dplyr::select(circumference_id, z_head_braegger, z_head_prader, z_head_sempe, analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_head_braegger",
-         "Sempé 1979" = "z_head_sempe",
-         "Prader 1989" = "z_head_prader")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_head", cols = c("CH-WHO 2011", "Sempé 1979", "Prader 1989"))
-
-density_head_pop1 <- ggplot(plot_data, aes(x=z_head))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, aes(color=growth_reference, weight = analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "SND"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), "black"))+
-  coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Head circumference z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_head_pop1
-
-ggsave(filename=file.path(here("output","figures","density_head_pop1.svg")),density_head_pop1,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-
-bmi
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# bmi
-
-plot_data <- data_bmi_pop1 |> 
-  dplyr::select(weight_id, z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf, analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_bmi_braegger",
-         "Swiss 2026" = "z_bmi_eiholzer",
-         "IOTF 2012" = "z_bmi_iotf")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_bmi", cols = c("CH-WHO 2011", "Swiss 2026", "IOTF 2012")) |> 
-  filter(is.na(z_bmi)==FALSE)
-
-density_bmi_pop1 <- ggplot(plot_data, aes(x=z_bmi))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, aes(color=growth_reference, weight = analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026", "SND"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint(), "black"))+
-  #coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  #scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  #scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Body mass index z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour =  "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_bmi_pop1
-
-ggsave(filename=file.path(here("output","figures","density_bmi_pop1.svg")),density_bmi_pop1,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-```{r}
-
- 
-density_plot_pop1 <- plot_grid(density_height_pop1,
-                          density_weight_pop1,
-                          density_bmi_pop1,
-                          density_head_pop1,
-                          ncol=2,
-                          align = "hv")
-
-
-density_plot_pop1
-
-ggsave(filename=file.path(here("output","figures","density-plot-z-scores_pop1.svg")), density_plot_pop1, device=svg,units="cm", height=16, width=26, bg = "white")
-
-```
-
-
-#### Alternative Figure: Density all growth references pop2
-
-Height
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# Height
-
-plot_data <- data_height_pop2 |> 
-  dplyr::select(height_id, z_height_braegger, z_height_eiholzer, z_height_prader, z_height_sempe, stabilized_genpop_analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_height_braegger",
-         "Swiss 2026" = "z_height_eiholzer",
-         "Sempé 1979" = "z_height_sempe",
-         "Prader 1989" = "z_height_prader")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_height", cols = c("CH-WHO 2011", "Swiss 2026", "Sempé 1979", "Prader 1989"))
-
-density_height_pop2 <- ggplot(plot_data, aes(x=z_height))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, linetype = "dashed", aes(color=growth_reference, weight = stabilized_genpop_analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026", "SND"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint(), "black"))+
-  coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Height z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_height_pop2
-
-ggsave(filename=file.path(here("output","figures","density_height_pop2.svg")),density_height_pop2,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-Weight
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# weight
-
-plot_data <- data_weight_pop2 |> 
-  dplyr::select(weight_id, z_weight_braegger, z_weight_eiholzer, z_weight_prader, z_weight_sempe, stabilized_genpop_analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_weight_braegger",
-         "Swiss 2026" = "z_weight_eiholzer",
-         "Sempé 1979" = "z_weight_sempe",
-         "Prader 1989" = "z_weight_prader")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_weight", cols = c("CH-WHO 2011", "Swiss 2026", "Sempé 1979", "Prader 1989"))
-
-density_weight_pop2 <- ggplot(plot_data, aes(x=z_weight))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, linetype = "dashed", aes(color=growth_reference, weight = stabilized_genpop_analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026", "SND"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint(), "black"))+
-  coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Weight z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_weight_pop2
-
-ggsave(filename=file.path(here("output","figures","density_weight_pop2.svg")),density_weight_pop2,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-
-Head circumference
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# head
-
-plot_data <- data_head_pop2 |> 
-  dplyr::select(circumference_id, z_head_braegger, z_head_prader, z_head_sempe, stabilized_genpop_analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_head_braegger",
-         "Sempé 1979" = "z_head_sempe",
-         "Prader 1989" = "z_head_prader")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_head", cols = c("CH-WHO 2011", "Sempé 1979", "Prader 1989"))
-
-density_head_pop2 <- ggplot(plot_data, aes(x=z_head))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, linetype = "dashed", aes(color=growth_reference, weight = stabilized_genpop_analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "SND"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), "black"))+
-  coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Head circumference z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_head_pop2
-
-ggsave(filename=file.path(here("output","figures","density_head_pop2.svg")),density_head_pop2,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-
-bmi
-
-```{r}
-#| warning: false
-
-ggtext_size <- function(base_size, ratio = 0.8) {
-  ratio * base_size / ggplot2::.pt
-}
-
-# bmi
-
-plot_data <- data_bmi_pop2 |> 
-  dplyr::select(weight_id, z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf, stabilized_genpop_analysis_weight) |> 
-  rename("CH-WHO 2011" = "z_bmi_braegger",
-         "Swiss 2026" = "z_bmi_eiholzer",
-         "IOTF 2012" = "z_bmi_iotf")
-
-plot_data <- plot_data |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_bmi", cols = c("CH-WHO 2011", "Swiss 2026", "IOTF 2012"))
-
-density_bmi_pop2 <- ggplot(plot_data, aes(x=z_bmi))+
-  stat_function(fun=dnorm,
-                n = 1000,
-                linetype="solid", linewidth=0.75, aes(color="SND"))+
-  stat_density(geom = "line", position = "identity", linewidth=0.75, adjust = 2, linetype = "dashed", aes(color=growth_reference, weight = stabilized_genpop_analysis_weight))+
-  geom_vline(aes(xintercept=0),
-             color="black", linetype="dashed", size=0.5)+
-  geom_vline(aes(xintercept=-0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  geom_vline(aes(xintercept=0.5),
-             color="black", linetype="dashed", linewidth=0.25)+
-  scale_color_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026", "SND"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint(), "black"))+
-  coord_cartesian(ylim = c(0, 0.5), xlim = c(-5,5), expand = FALSE)+
-  scale_x_continuous(breaks=c(-5,-4,-3,-2,-1,-0.5,0,0.5,1,2,3,4,5)) +
-  scale_y_continuous(breaks=c(0,0.1,0.2,0.3,0.4))+
-  ylab("Density")+
-  xlab("Body mass index z-score")+
-  theme_classic()+
-  theme(
-    axis.line = element_line(size = 0.5, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 11, colour = "black", face = "bold"),
-    title = element_text(size = 12),
-    legend.position = "bottom",
-    legend.text = element_text(size = 8, colour =  "black"),
-    legend.title = element_blank(),
-    plot.margin = margin(t= 10,
-                         r = 10,
-                         l = 10,
-                         b = 10)
-  )
-
-
-density_bmi_pop2
-
-ggsave(filename=file.path(here("output","figures","density_bmi_pop2.svg")),density_bmi_pop2,device=svg,units="cm", height=10, width=26, bg = "white")
-
-```
-
-```{r}
-
- 
-density_plot_pop2 <- plot_grid(density_height_pop2,
-                          density_weight_pop2,
-                          density_bmi_pop2,
-                          density_head_pop2,
-                          ncol=2,
-                          align = "hv")
-
-
-density_plot_pop2
-
-ggsave(filename=file.path(here("output","figures","density-plot-z-scores_pop2.svg")),density_plot_pop2,device=svg,units="cm", height=16, width=26, bg = "white")
-
-```
-
-
-
-
-
-
-### Figure 2: Mean z-scores over age pop1 vs pop2
+## Figure 2: Mean z-scores over age pop1 vs pop2
 
 I use penalized cubic B-spline regression on age to check whether the fit of the growth references changes over age.
 The B-splines are cubic (m=c(3)) and the penalty is set on the second derivative (m=c(3,2)).
@@ -4745,18 +3881,18 @@ plot_spline_height_girls_pop1_pop2 <- ggplot(data_height_pop1 |> filter(sex == "
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_eiholzer))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_swiss_2026))+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_braegger))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_ch_who_2011))+
   geom_smooth(data = data_height_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_eiholzer))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_swiss_2026))+
   geom_smooth(data = data_height_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_braegger))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_ch_who_2011))+
   scale_color_manual(name = NULL,
                      breaks = c("Swiss 2026", "CH-WHO 2011"),
                      values = c(unibeMint(), unibeRed()))+
@@ -4797,18 +3933,18 @@ plot_spline_height_boys_pop1_pop2 <- ggplot(data_height_pop1 |> filter(sex == "m
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_eiholzer))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_swiss_2026))+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_braegger))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_ch_who_2011))+
   geom_smooth(data = data_height_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_eiholzer))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_height_swiss_2026))+
   geom_smooth(data = data_height_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_braegger))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_height_ch_who_2011))+
   scale_color_manual(name = NULL,
                      breaks = c("Swiss 2026", "CH-WHO 2011"),
                      values = c(unibeMint(), unibeRed()))+
@@ -4855,18 +3991,18 @@ plot_spline_weight_girls_pop1_pop2 <- ggplot(data_weight_pop1 |> filter(sex == "
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_eiholzer))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_swiss_2026))+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_braegger))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_ch_who_2011))+
   geom_smooth(data = data_weight_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_eiholzer))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_swiss_2026))+
   geom_smooth(data = data_weight_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_braegger))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_ch_who_2011))+
   scale_color_manual(name = NULL,
                      breaks = c("Swiss 2026", "CH-WHO 2011"),
                      values = c(unibeMint(), unibeRed()))+
@@ -4907,18 +4043,18 @@ plot_spline_weight_boys_pop1_pop2 <- ggplot(data_weight_pop1 |> filter(sex == "m
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_eiholzer))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_swiss_2026))+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_braegger))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_ch_who_2011))+
   geom_smooth(data = data_weight_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_eiholzer))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_weight_swiss_2026))+
   geom_smooth(data = data_weight_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_braegger))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_weight_ch_who_2011))+
   scale_color_manual(name = NULL,
                      breaks = c("Swiss 2026", "CH-WHO 2011"),
                      values = c(unibeMint(), unibeRed()))+
@@ -4964,18 +4100,18 @@ plot_spline_bmi_girls_pop1_pop2 <- ggplot(data_bmi_pop1 |> filter(sex == "f"), a
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_eiholzer))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_swiss_2026))+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_braegger))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_ch_who_2011))+
   geom_smooth(data = data_bmi_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_eiholzer))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_swiss_2026))+
   geom_smooth(data = data_bmi_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_braegger))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_ch_who_2011))+
   scale_color_manual(name = NULL,
                      breaks = c("Swiss 2026", "CH-WHO 2011"),
                      values = c(unibeMint(), unibeRed()))+
@@ -5016,18 +4152,18 @@ plot_spline_bmi_boys_pop1_pop2 <- ggplot(data_bmi_pop1 |> filter(sex == "m"), ae
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_eiholzer))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_swiss_2026))+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_braegger))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_ch_who_2011))+
   geom_smooth(data = data_bmi_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_eiholzer))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_bmi_swiss_2026))+
   geom_smooth(data = data_bmi_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_braegger))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_bmi_ch_who_2011))+
   scale_color_manual(name = NULL,
                      breaks = c("Swiss 2026", "CH-WHO 2011"),
                      values = c(unibeMint(), unibeRed()))+
@@ -5069,21 +4205,28 @@ head circumference
 
 # Girls
 
-plot_spline_head_girls_pop1_pop2 <- ggplot(data_head_pop1 |> filter(sex == "f"), aes(x = age_years_circumference, y = z_head_braegger))+
+plot_spline_head_girls_pop1_pop2 <- ggplot(data_head_pop1 |> filter(sex == "f"), aes(x = age_years_circumference))+
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "'All children' sample", fill = "'All children' sample"))+
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_head_swiss_2026))+
+  geom_smooth(method = "gam",
+              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_head_ch_who_2011))+
   geom_smooth(data = data_head_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "'Normal growth and weighted' subsample", fill = "'Normal growth and weighted' subsample"))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_head_swiss_2026))+
+  geom_smooth(data = data_head_pop2 |> filter(sex == "f"),
+              method = "gam",
+              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_head_ch_who_2011))+
   scale_color_manual(name = NULL,
-                     breaks = c("'All children' sample", "'Normal growth and weighted' subsample"),
-                     values = c(unibeRed(), unibeRed()))+
+                     breaks = c("Swiss 2026", "CH-WHO 2011"),
+                     values = c(unibeMint(), unibeRed()))+
   scale_fill_manual(name = NULL,
-                     breaks = c("'All children' sample", "'Normal growth and weighted' subsample"),
-                     values = c(unibeRed(), unibeRed()))+
+                     breaks = c("Swiss 2026", "CH-WHO 2011"),
+                     values = c(unibeMint(), unibeRed()))+
   scale_linetype_manual(name = NULL,
                         breaks = c("'All children' sample", "'Normal growth and weighted' subsample"),
                         values = c("solid", "dashed"))+
@@ -5114,21 +4257,28 @@ plot_spline_head_girls_pop1_pop2
 
 # boys
 
-plot_spline_head_boys_pop1_pop2 <- ggplot(data_head_pop1 |> filter(sex == "m"), aes(x = age_years_circumference, y = z_head_braegger))+
+plot_spline_head_boys_pop1_pop2 <- ggplot(data_head_pop1 |> filter(sex == "m"), aes(x = age_years_circumference))+
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'All children' sample", weight = analysis_weight, color = "'All children' sample", fill = "'All children' sample"))+
-  geom_smooth(data = data_head_pop2 |> filter(sex == "m"),
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_head_swiss_2026))+
+  geom_smooth(method = "gam",
+              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
+              aes(linetype="'All children' sample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_head_ch_who_2011))+
+  geom_smooth(data = data_head_pop2 |> filter(sex == "f"),
               method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "'Normal growth and weighted' subsample", fill = "'Normal growth and weighted' subsample"))+
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "Swiss 2026", fill = "Swiss 2026", y = z_head_swiss_2026))+
+  geom_smooth(data = data_head_pop2 |> filter(sex == "f"),
+              method = "gam",
+              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
+              aes(linetype="'Normal growth and weighted' subsample", weight = analysis_weight, color = "CH-WHO 2011", fill = "CH-WHO 2011", y = z_head_ch_who_2011))+
   scale_color_manual(name = NULL,
-                     breaks = c("'All children' sample", "'Normal growth and weighted' subsample"),
-                     values = c(unibeRed(), unibeRed()))+
+                     breaks = c("Swiss 2026", "CH-WHO 2011"),
+                     values = c(unibeMint(), unibeRed()))+
   scale_fill_manual(name = NULL,
-                     breaks = c("'All children' sample", "'Normal growth and weighted' subsample"),
-                     values = c(unibeRed(), unibeRed()))+
+                     breaks = c("Swiss 2026", "CH-WHO 2011"),
+                     values = c(unibeMint(), unibeRed()))+
   scale_linetype_manual(name = NULL,
                         breaks = c("'All children' sample", "'Normal growth and weighted' subsample"),
                         values = c("solid", "dashed"))+
@@ -5168,7 +4318,7 @@ title_boys <- ggdraw()+
   draw_label("Boys", size=11, fontface = "bold")
 
 
-legend_plot <- ggplot(data_height_pop1 |> filter(sex == "f"), aes(x = age_years_height, y = z_height_eiholzer))+
+legend_plot <- ggplot(data_height_pop1 |> filter(sex == "f"), aes(x = age_years_height, y = z_height_swiss_2026))+
   geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
   geom_smooth(method = "gam",
               formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
@@ -5255,847 +4405,6 @@ plot_spline_age_z_pop1_pop2 <- plot_grid(plot_spline_titles,
 plot_spline_age_z_pop1_pop2
 
 ggsave(filename=file.path(here("output","figures","plot_spline_age_z_pop1_pop2.svg")),plot_spline_age_z_pop1_pop2,device=svg,units="cm", height=23,width=18)
-
-```
-
-#### Alternative Figure: Mean z-scores all growth references, population 1
-
-Height
-
-```{r}
-
-
-# Girls
-
-plot_spline_height_girls_pop1 <- data_height_pop1 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_height_braegger, z_height_eiholzer,z_height_sempe,z_height_prader,  age_years_height, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_height_braegger",
-         "Swiss 2026" = "z_height_eiholzer",
-         "Sempé 1979" = "z_height_sempe",
-         "Prader 1989" = "z_height_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_height", cols = -c(age_years_height, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_height, y = z_height, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean height z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_height_girls_pop1
-
-
-
-# boys
-
-plot_spline_height_boys_pop1 <- data_height_pop1 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_height_braegger, z_height_eiholzer,z_height_sempe,z_height_prader,  age_years_height, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_height_braegger",
-         "Swiss 2026" = "z_height_eiholzer",
-         "Sempé 1979" = "z_height_sempe",
-         "Prader 1989" = "z_height_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_height", cols = -c(age_years_height, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_height, y = z_height, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean height z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_height_boys_pop1
-
-```
-
-
-
-Weight
-
-```{r}
-
-
-# Girls
-
-plot_spline_weight_girls_pop1 <- data_weight_pop1 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_weight_braegger, z_weight_eiholzer,z_weight_sempe,z_weight_prader,  age_years_weight, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_weight_braegger",
-         "Swiss 2026" = "z_weight_eiholzer",
-         "Sempé 1979" = "z_weight_sempe",
-         "Prader 1989" = "z_weight_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_weight", cols = -c(age_years_weight, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_weight, y = z_weight, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean Weight z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_weight_girls_pop1
-
-
-
-# boys
-
-plot_spline_weight_boys_pop1 <- data_weight_pop1 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_weight_braegger, z_weight_eiholzer,z_weight_sempe,z_weight_prader,  age_years_weight, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_weight_braegger",
-         "Swiss 2026" = "z_weight_eiholzer",
-         "Sempé 1979" = "z_weight_sempe",
-         "Prader 1989" = "z_weight_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_weight", cols = -c(age_years_weight, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_weight, y = z_weight, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean Weight z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_weight_boys_pop1
-
-```
-
-
-Head
-
-```{r}
-
-
-# Girls
-
-plot_spline_head_girls_pop1 <- data_head_pop1 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_head_braegger,z_head_sempe,z_head_prader,  age_years_circumference, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_head_braegger",
-         "Sempé 1979" = "z_head_sempe",
-         "Prader 1989" = "z_head_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_head", cols = -c(age_years_circumference, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_circumference, y = z_head, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean head circumference z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_head_girls_pop1
-
-
-
-# Boys
-
-plot_spline_head_boys_pop1 <- data_head_pop1 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_head_braegger,z_head_sempe,z_head_prader,  age_years_circumference, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_head_braegger",
-         "Sempé 1979" = "z_head_sempe",
-         "Prader 1989" = "z_head_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_head", cols = -c(age_years_circumference, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_circumference, y = z_head, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean head circumference z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_head_boys_pop1
-
-```
-
-
-bmi
-
-```{r}
-
-
-# Girls
-
-plot_spline_bmi_girls_pop1 <- data_bmi_pop1 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf, age_years_bmi, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_bmi_braegger",
-         "Swiss 2026" = "z_bmi_eiholzer",
-         "IOTF 2012" = "z_bmi_iotf") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_bmi", cols = -c(age_years_bmi, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_bmi, y = z_bmi, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean Body mass index z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  scale_fill_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0, 3, 6, 9, 12, 15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_bmi_girls_pop1
-
-
-
-# Girls
-
-plot_spline_bmi_boys_pop1 <- data_bmi_pop1 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf, age_years_bmi, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_bmi_braegger",
-         "Swiss 2026" = "z_bmi_eiholzer",
-         "IOTF 2012" = "z_bmi_iotf") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_bmi", cols = -c(age_years_bmi, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_bmi, y = z_bmi, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2)+
-  ylab("Mean body mass index z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  scale_fill_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0, 3, 6, 9, 12, 15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-plot_spline_bmi_boys_pop1
-
-
-```
-
-
-```{r}
-
-
-title_girls <- ggdraw()+
-  draw_label("Girls", size=11, fontface = "bold")
-
-title_boys <- ggdraw()+
-  draw_label("Boys", size=11, fontface = "bold")
-
-get_legend2 <- function(a.gplot){
-  if (!gtable::is.gtable(a.gplot))
-    a.gplot <- ggplotGrob(a.gplot)
-  leg <- which(sapply(a.gplot$grobs, function(x) x$name) == "guide-box")
-  a.gplot$grobs[[leg]]
-}
-
-legend_height <- get_legend2(plot_spline_height_girls_pop1 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-legend_weight <- get_legend2(plot_spline_weight_girls_pop1 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-legend_head <- get_legend2(plot_spline_head_girls_pop1 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-legend_bmi <- get_legend2(plot_spline_bmi_girls_pop1 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-
-plot_spline_titles <- plot_grid(title_girls, title_boys)
-
-plot_spline_height_zscore_age_pop1 <- plot_grid(plot_spline_height_girls_pop1 + theme(legend.position="none"),
-                                           plot_spline_height_boys_pop1 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_weight_zscore_age_pop1 <- plot_grid(plot_spline_weight_girls_pop1 + theme(legend.position="none"),
-                                           plot_spline_weight_boys_pop1 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_head_zscore_age_pop1 <- plot_grid(plot_spline_head_girls_pop1 + theme(legend.position="none"),
-                                           plot_spline_head_boys_pop1 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_bmi_zscore_age_pop1 <- plot_grid(plot_spline_bmi_girls_pop1 + theme(legend.position="none"),
-                                           plot_spline_bmi_boys_pop1 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_age_z_pop1 <- plot_grid(plot_spline_titles,
-                             plot_spline_height_zscore_age_pop1,
-                             legend_height,
-                             plot_spline_weight_zscore_age_pop1,
-                             legend_weight,
-                             plot_spline_bmi_zscore_age_pop1,
-                             legend_bmi,
-                             plot_spline_head_zscore_age_pop1,
-                             legend_head,
-                             ncol = 1,
-                             rel_heights = c(0.2,1,0.2,1,0.2,1,0.2,1,0.2))
-
-plot_spline_age_z_pop1
-
-ggsave(filename=file.path(here("output","figures","plot_spline_age_z_pop1.svg")),plot_spline_age_z_pop1,device=svg,units="cm", height=23,width=18)
-
-```
-
-
-#### Alternative Figure: Mean z-scores all growth references, population 2
-
-Height
-
-```{r}
-
-
-# Girls
-
-plot_spline_height_girls_pop2 <- data_height_pop2 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_height_braegger, z_height_eiholzer,z_height_sempe,z_height_prader,  age_years_height, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_height_braegger",
-         "Swiss 2026" = "z_height_eiholzer",
-         "Sempé 1979" = "z_height_sempe",
-         "Prader 1989" = "z_height_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_height", cols = -c(age_years_height, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_height, y = z_height, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean height z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_height_girls_pop2
-
-
-
-# boys
-
-plot_spline_height_boys_pop2 <- data_height_pop2 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_height_braegger, z_height_eiholzer,z_height_sempe,z_height_prader,  age_years_height, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_height_braegger",
-         "Swiss 2026" = "z_height_eiholzer",
-         "Sempé 1979" = "z_height_sempe",
-         "Prader 1989" = "z_height_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_height", cols = -c(age_years_height, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_height, y = z_height, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean height z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_height_boys_pop2
-
-```
-
-
-
-Weight
-
-```{r}
-
-
-# Girls
-
-plot_spline_weight_girls_pop2 <- data_weight_pop2 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_weight_braegger, z_weight_eiholzer,z_weight_sempe,z_weight_prader,  age_years_weight, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_weight_braegger",
-         "Swiss 2026" = "z_weight_eiholzer",
-         "Sempé 1979" = "z_weight_sempe",
-         "Prader 1989" = "z_weight_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_weight", cols = -c(age_years_weight, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_weight, y = z_weight, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean weight z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_weight_girls_pop2
-
-
-
-# boys
-
-plot_spline_weight_boys_pop2 <- data_weight_pop2 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_weight_braegger, z_weight_eiholzer,z_weight_sempe,z_weight_prader,  age_years_weight, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_weight_braegger",
-         "Swiss 2026" = "z_weight_eiholzer",
-         "Sempé 1979" = "z_weight_sempe",
-         "Prader 1989" = "z_weight_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_weight", cols = -c(age_years_weight, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_weight, y = z_weight, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean weight z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011", "Swiss 2026"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_weight_boys_pop2
-
-```
-
-
-Head
-
-```{r}
-
-
-# Girls
-
-plot_spline_head_girls_pop2 <- data_head_pop2 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_head_braegger,z_head_sempe,z_head_prader,  age_years_circumference, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_head_braegger",
-         "Sempé 1979" = "z_head_sempe",
-         "Prader 1989" = "z_head_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_head", cols = -c(age_years_circumference, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_circumference, y = z_head, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean head circumference z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_head_girls_pop2
-
-
-
-# Boys
-
-plot_spline_head_boys_pop2 <- data_head_pop2 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_head_braegger,z_head_sempe,z_head_prader,  age_years_circumference, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_head_braegger",
-         "Sempé 1979" = "z_head_sempe",
-         "Prader 1989" = "z_head_prader") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_head", cols = -c(age_years_circumference, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_circumference, y = z_head, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean head circumference z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  scale_fill_manual(breaks = c("Sempé 1979", "Prader 1989", "CH-WHO 2011"),
-                     values = c(unibeApricot(), unibeIce(), unibeRed()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0,3,6,9,12,15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_head_boys_pop2
-
-```
-
-
-bmi
-
-```{r}
-
-
-# Girls
-
-plot_spline_bmi_girls_pop2 <- data_bmi_pop2 %>%
-  filter(sex == "f") %>% 
-  dplyr::select(z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf, age_years_bmi, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_bmi_braegger",
-         "Swiss 2026" = "z_bmi_eiholzer",
-         "IOTF 2012" = "z_bmi_iotf") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_bmi", cols = -c(age_years_bmi, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_bmi, y = z_bmi, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean body mass index z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  scale_fill_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0, 3, 6, 9, 12, 15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-
-plot_spline_bmi_girls_pop2
-
-
-
-# Girls
-
-plot_spline_bmi_boys_pop2 <- data_bmi_pop2 %>%
-  filter(sex == "m") %>% 
-  dplyr::select(z_bmi_braegger, z_bmi_eiholzer, z_bmi_iotf, age_years_bmi, analysis_weight) %>%
-  rename("CH-WHO 2011" = "z_bmi_braegger",
-         "Swiss 2026" = "z_bmi_eiholzer",
-         "IOTF 2012" = "z_bmi_iotf") |> 
-  pivot_longer(names_to = "growth_reference", values_to ="z_bmi", cols = -c(age_years_bmi, analysis_weight)) %>% 
-  ggplot(aes(x = age_years_bmi, y = z_bmi, color = growth_reference, fill = growth_reference, weight = analysis_weight))+
-  geom_hline(yintercept = 0, size = 0.5, linetype = "longdash", color="black")+
-  geom_smooth(method = "gam",
-              formula = y ~ s(x, bs = "bs", m=c(3,2)), size = 0.5, alpha = 0.2,
-              linetype = "dashed")+
-  ylab("Mean body mass index z-score")+
-  xlab("Age (years)")+
-  scale_color_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  scale_fill_manual(breaks = c("CH-WHO 2011", "IOTF 2012", "Swiss 2026"),
-                     values = c(unibeRed(), unibeMustard(), unibeMint()))+
-  coord_cartesian(ylim = c(-1.5, 1.5), xlim = c(0,18), expand = FALSE)+
-  scale_x_continuous(breaks = c(0, 3, 6, 9, 12, 15,18))+
-  scale_y_continuous(breaks = c(-1.5, -1, -0.5, 0, 0.5, 1, 1.5))+
-  theme_minimal()+
-  theme(
-    axis.line = element_line(size = 0.25, colour = "black", linetype="solid",),
-    axis.text = element_text(size = 8, colour = "black"),
-    axis.title.x = element_text(size = 8, colour = "black"),
-    axis.title.y = element_text(size = 8, colour = "black", face = "bold"),
-    strip.text.x = element_text(size = 8, colour = "black"),
-    legend.title = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    title = element_text(size = 10, colour = "black")
-  )
-  
-plot_spline_bmi_boys_pop2
-
-
-```
-
-
-```{r}
-
-
-title_girls <- ggdraw()+
-  draw_label("Girls", size=11, fontface = "bold")
-
-title_boys <- ggdraw()+
-  draw_label("Boys", size=11, fontface = "bold")
-
-get_legend2 <- function(a.gplot){
-  if (!gtable::is.gtable(a.gplot))
-    a.gplot <- ggplotGrob(a.gplot)
-  leg <- which(sapply(a.gplot$grobs, function(x) x$name) == "guide-box")
-  a.gplot$grobs[[leg]]
-}
-
-legend_height <- get_legend2(plot_spline_height_girls_pop2 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-legend_weight <- get_legend2(plot_spline_weight_girls_pop2 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-legend_head <- get_legend2(plot_spline_head_girls_pop2 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-legend_bmi <- get_legend2(plot_spline_bmi_girls_pop2 + theme(legend.position = "bottom", legend.key.width = unit(1, "cm")))
-
-
-plot_spline_titles <- plot_grid(title_girls, title_boys)
-
-plot_spline_height_zscore_age_pop2 <- plot_grid(plot_spline_height_girls_pop2 + theme(legend.position="none"),
-                                           plot_spline_height_boys_pop2 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_weight_zscore_age_pop2 <- plot_grid(plot_spline_weight_girls_pop2 + theme(legend.position="none"),
-                                           plot_spline_weight_boys_pop2 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_head_zscore_age_pop2 <- plot_grid(plot_spline_head_girls_pop2 + theme(legend.position="none"),
-                                           plot_spline_head_boys_pop2 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_bmi_zscore_age_pop2 <- plot_grid(plot_spline_bmi_girls_pop2 + theme(legend.position="none"),
-                                           plot_spline_bmi_boys_pop2 + theme(legend.position = "none"),
-                                           ncol=2,
-                                           align = "h")
-
-plot_spline_age_z_pop2 <- plot_grid(plot_spline_titles,
-                             plot_spline_height_zscore_age_pop2,
-                             legend_height,
-                             plot_spline_weight_zscore_age_pop2,
-                             legend_weight,
-                             plot_spline_bmi_zscore_age_pop2,
-                             legend_bmi,
-                             plot_spline_head_zscore_age_pop2,
-                             legend_head,
-                             ncol = 1,
-                             rel_heights = c(0.2,1,0.2,1,0.2,1,0.2,1,0.2))
-
-plot_spline_age_z_pop2
-
-ggsave(filename=file.path(here("output","figures","plot_spline_age_z_pop2.svg")),plot_spline_age_z_pop2,device=svg,units="cm", height=23,width=18)
 
 ```
 
@@ -6720,8 +5029,7 @@ draw_centiles(model_height_girls_base, sex = "f", parameter = "height", base_mod
 
 ```
 
-A transformation with 0.44 is the power transformation parameter and the BCTo family seems to yield the best fitting centiles.
-However, they seem to be slightly overfitted.
+
 
 ```{r}
 
@@ -6779,8 +5087,6 @@ draw_centiles(gamlss_model_height_girls_weighted.BCCGo.nu1, sex = "f", parameter
 
 ```
 
-The sigma parameter seems to be overfitted when using the default pb function.
-
 
 Use GAIC
 
@@ -6801,7 +5107,7 @@ max_k
 gamlss_model_height_girls_weighted.BCTo.1 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=2),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=2),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=2),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -6853,8 +5159,6 @@ draw_centiles(gamlss_model_height_girls_weighted.BCCGo.nu1.1, sex = "f", paramet
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
-
 
 ```{r}
 
@@ -6862,7 +5166,7 @@ Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 gamlss_model_height_girls_weighted.BCTo.2 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=4),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=4),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=4),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -6914,8 +5218,6 @@ draw_centiles(gamlss_model_height_girls_weighted.BCCGo.nu1.2, sex = "f", paramet
 
 ```
 
-The nu and centiles of the BCTo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
 
 
 ```{r}
@@ -6924,7 +5226,7 @@ The centiles of the BCCGo nu = 1 seem good.
 gamlss_model_height_girls_weighted.BCTo.3 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=6),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=6),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=6),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -6983,7 +5285,7 @@ draw_centiles(gamlss_model_height_girls_weighted.BCCGo.nu1.3, sex = "f", paramet
 gamlss_model_height_girls_weighted.BCTo.4 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=8),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=8),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=8),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -7041,7 +5343,7 @@ draw_centiles(gamlss_model_height_girls_weighted.BCCGo.nu1.4, sex = "f", paramet
 gamlss_model_height_girls_weighted.BCTo.5 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=max_k),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=max_k),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=max_k),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -7092,10 +5394,7 @@ draw_centiles(gamlss_model_height_girls_weighted.BCCGo.nu1.5, sex = "f", paramet
 
 ```
 
-There seems to be only minimal skewness in the height distribution at all ages.
-The residual diagnostics of the models BCTo and BCCGo seem slightly better, but minimal skewness.
 
-I will therefore choose a model with BCCGo nu = 1.
 
 ```{r}
 
@@ -7146,13 +5445,6 @@ draw_centiles(gamlss_model_height_girls_weighted.BCCGo.nu1.5, sex = "f", paramet
 
 ```
 
-The residual diagnostics for all models seem very similar.
-
-The centiles of the ML model seem slightly overfitted.
-The centiles up to k = 6 seem to have an edge effect at age = 0.
-
-Take the k = 8 model.
-
 Compare the centiles to those of Swiss 2026.
 
 Predict LMS
@@ -7179,11 +5471,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_eiholzer_height <- interpolated_eiholzer_height |> 
+interpolated_swiss_2026_height <- interpolated_swiss_2026_height |> 
   mutate(age_years = age_days/365.25) |>
   filter(age_days <= 6569)
 
-interpolated_eiholzer_height <- interpolated_eiholzer_height |> 
+interpolated_swiss_2026_height <- interpolated_swiss_2026_height |> 
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -7205,7 +5497,7 @@ LMS_height_girls <- LMS_height_girls |>
 
 plot_centiles_height_girls <- LMS_height_girls |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
+  bind_rows(interpolated_swiss_2026_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -7215,11 +5507,9 @@ plot_centiles_height_girls <- LMS_height_girls |>
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   scale_y_continuous(name = "Height (cm)",
-                     limits = c(40, 200), breaks= c(40, 100, 150, 200), expand = c(0,0),
-                     minor_breaks = seq(40, 200, by = 1))+
+                     limits = c(40, 200), breaks= c(40, 100, 150, 200), expand = c(0,0))+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0),
-                     minor_breaks = seq(0, 18, by = 1))+
+                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0))+
   scale_colour_manual(name = NULL,
                       values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
@@ -7235,7 +5525,7 @@ plot_centiles_height_girls
 
 plot_centiles_height_girls_2yr <- LMS_height_girls |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
+  bind_rows(interpolated_swiss_2026_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -7245,11 +5535,9 @@ plot_centiles_height_girls_2yr <- LMS_height_girls |>
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   scale_y_continuous(name = "Height (cm)",
-                     limits = c(40, 100), breaks= c(40, 60, 80, 100), expand = c(0,0),
-                     minor_breaks = seq(40, 100, by = 1))+
+                     limits = c(40, 100), breaks= c(40, 60, 80, 100), expand = c(0,0))+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0),
-                     minor_breaks = seq(0, 2, by = 1))+
+                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0))+
   scale_colour_manual(name = NULL,
                       values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
@@ -7326,8 +5614,7 @@ draw_centiles(model_height_boys_base, sex = "m", parameter = "height", base_mode
 
 ```
 
-A transformation with 0.51 is the power transformation parameter and the BCTo family seems to yield the best fitting centiles.
-However, they seem to be slightly overfitted.
+
 
 ```{r}
 
@@ -7385,8 +5672,6 @@ draw_centiles(gamlss_model_height_boys_weighted.BCCGo.nu1, sex = "m", parameter 
 
 ```
 
-The centiles seem fine.
-
 
 Use GAIC
 
@@ -7407,7 +5692,7 @@ max_k
 gamlss_model_height_boys_weighted.BCTo.1 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=2),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=2),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=2),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -7459,7 +5744,6 @@ draw_centiles(gamlss_model_height_boys_weighted.BCCGo.nu1.1, sex = "m", paramete
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 
 
 ```{r}
@@ -7468,7 +5752,7 @@ Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 gamlss_model_height_boys_weighted.BCTo.2 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=4),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=4),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=4),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -7520,8 +5804,6 @@ draw_centiles(gamlss_model_height_boys_weighted.BCCGo.nu1.2, sex = "m", paramete
 
 ```
 
-The nu and centiles of the BCTo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
 
 
 ```{r}
@@ -7530,7 +5812,7 @@ The centiles of the BCCGo nu = 1 seem good.
 gamlss_model_height_boys_weighted.BCTo.3 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=6),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=6),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=6),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -7589,7 +5871,7 @@ draw_centiles(gamlss_model_height_boys_weighted.BCCGo.nu1.3, sex = "m", paramete
 gamlss_model_height_boys_weighted.BCTo.4 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=8),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=8),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=8),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -7647,7 +5929,7 @@ draw_centiles(gamlss_model_height_boys_weighted.BCCGo.nu1.4, sex = "m", paramete
 gamlss_model_height_boys_weighted.BCTo.5 <- gamlss(height_cm ~ pbm(age_days_height_trans, method="GAIC", k=max_k),
                                           sigma.formula = ~pb(age_days_height_trans, method="GAIC", k=max_k),
                                           nu.formula = ~pb(age_days_height_trans, method="GAIC", k=max_k),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_height_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -7698,10 +5980,7 @@ draw_centiles(gamlss_model_height_boys_weighted.BCCGo.nu1.5, sex = "m", paramete
 
 ```
 
-There seems to be only minimal skewness in the height distribution at all ages.
-The residual diagnostics of the models BCTo and BCCGo seem slightly better, but minimal skewness.
 
-I will therefore choose a model with BCCGo nu = 1.
 
 ```{r}
 #| warning: false
@@ -7753,12 +6032,6 @@ draw_centiles(gamlss_model_height_boys_weighted.BCCGo.nu1.5, sex = "m", paramete
 
 ```
 
-The residual diagnostics for all models seem very similar.
-
-The centiles of the default p spline model seem fine.
-The centiles of all GAIC models seem very similar regardless of k = 2 or k = log n.
-
-Take the default p-spline model.
 
 Compare the centiles to those of Swiss 2026.
 
@@ -7787,11 +6060,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_eiholzer_height <- interpolated_eiholzer_height |> 
+interpolated_swiss_2026_height <- interpolated_swiss_2026_height |> 
   mutate(age_years = age_days/365.25) |>
   filter(age_days <= 6569)
 
-interpolated_eiholzer_height <- interpolated_eiholzer_height |> 
+interpolated_swiss_2026_height <- interpolated_swiss_2026_height |> 
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -7813,7 +6086,7 @@ LMS_height_boys <- LMS_height_boys |>
 
 plot_centiles_height_boys <- LMS_height_boys |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
+  bind_rows(interpolated_swiss_2026_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -7845,7 +6118,7 @@ plot_centiles_height_boys
 
 plot_centiles_height_boys_2yr <- LMS_height_boys |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
+  bind_rows(interpolated_swiss_2026_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -7876,7 +6149,7 @@ plot_centiles_height_boys_2yr
 
 
 png(here("output", "figures", "wormplot_height_boys.png"), width = 9, height = 12, unit = "cm", res = 600)
-wp(gamlss_model_height_boys_weighted.BCCGo.nu1.4, 
+wp(gamlss_model_height_boys_weighted.BCCGo.nu1, 
    xvar = ~age_days_height, 
    xcut.points = age_groups, 
    ylim.worm = 1,
@@ -7942,8 +6215,7 @@ draw_centiles(model_weight_girls_base, sex = "f", parameter = "weight", base_mod
 
 ```
 
-A transformation with 0.67 is the power transformation parameter and the BCPEo family seems to yield the best fitting centiles.
-However, they seem to be overfitted.
+
 
 ```{r}
 
@@ -8001,7 +6273,6 @@ draw_centiles(gamlss_model_weight_girls_weighted.BCCGo.nu1, sex = "f", parameter
 
 ```
 
-The sigma parameter seems to be overfitted when using the default pb function.
 
 
 Use GAIC
@@ -8075,7 +6346,6 @@ draw_centiles(gamlss_model_weight_girls_weighted.BCCGo.nu1.1, sex = "f", paramet
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 
 
 ```{r}
@@ -8136,8 +6406,6 @@ draw_centiles(gamlss_model_weight_girls_weighted.BCCGo.nu1.2, sex = "f", paramet
 
 ```
 
-The nu and centiles of the BCPEo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
 
 
 ```{r}
@@ -8314,12 +6582,6 @@ draw_centiles(gamlss_model_weight_girls_weighted.BCCGo.nu1.5, sex = "f", paramet
 
 ```
 
-k=2 until k=6 are overfitted.
-nu = 1 seems to not yield in good residual diagnostics showing skewness.
-
-
-
-
 
 
 ```{r}
@@ -8358,10 +6620,6 @@ draw_centiles(gamlss_model_weight_girls_weighted.BCCGo.5, sex = "f", parameter =
 
 ```
 
-The residual diagnostics for all models seem very similar.
-BCCGo and BCPEo seem similar, choose BCCGo because parsimonious.
-
-Take the k = 8 model.
 
 Compare the centiles to those of Swiss 2026.
 
@@ -8391,11 +6649,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_eiholzer_weight <- interpolated_eiholzer_weight |> 
+interpolated_swiss_2026_weight <- interpolated_swiss_2026_weight |> 
   mutate(age_years = age_days/365.25) |>
   filter(age_days <= 6569)
 
-interpolated_eiholzer_weight <- interpolated_eiholzer_weight |> 
+interpolated_swiss_2026_weight <- interpolated_swiss_2026_weight |> 
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -8417,7 +6675,7 @@ LMS_weight_girls <- LMS_weight_girls |>
 
 plot_centiles_weight_girls <- LMS_weight_girls |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
+  bind_rows(interpolated_swiss_2026_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -8426,12 +6684,10 @@ plot_centiles_weight_girls <- LMS_weight_girls |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "weight (kg)",
-                     limits = c(0, 100), breaks= c(0, 20, 40, 60, 80, 100), expand = c(0,0),
-                     minor_breaks = c(seq(0,100, by = 1)))+
+  scale_y_continuous(name = "Weight (kg)",
+                     limits = c(0, 100), breaks= c(0, 20, 40, 60, 80, 100), expand = c(0,0))+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0),
-                     minor_breaks = c(seq(0,18, by = 1)))+
+                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0))+
   scale_colour_manual(name = NULL,
                       values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
@@ -8446,7 +6702,7 @@ plot_centiles_weight_girls
 
 plot_centiles_weight_girls_2yr <- LMS_weight_girls |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
+  bind_rows(interpolated_swiss_2026_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -8455,12 +6711,10 @@ plot_centiles_weight_girls_2yr <- LMS_weight_girls |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "weight (kg)",
-                     limits = c(0, 20), breaks= c(0, 5, 10, 15, 20), expand = c(0,0),
-                     minor_breaks = c(seq(0,20, by = 1)))+
+  scale_y_continuous(name = "Weight (kg)",
+                     limits = c(0, 20), breaks= c(0, 5, 10, 15, 20), expand = c(0,0))+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0),
-                     minor_breaks = c(seq(0,2, by = 1)))+
+                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0))+
   scale_colour_manual(name = NULL,
                       values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
@@ -8537,8 +6791,6 @@ draw_centiles(model_weight_boys_base, sex = "m", parameter = "weight", base_mode
 
 ```
 
-A transformation with 0.27 is the power transformation parameter and the BCPEo family seems to yield the best fitting centiles.
-However, they seem to be slightly overfitted.
 
 ```{r}
 
@@ -8595,8 +6847,6 @@ draw_centiles(gamlss_model_weight_boys_weighted.BCCGo, sex = "m", parameter = "w
 draw_centiles(gamlss_model_weight_boys_weighted.BCCGo.nu1, sex = "m", parameter = "weight", base_model = model_weight_boys_base)
 
 ```
-
-The sigma parameter seems to be overfitted when using the default pb function.
 
 
 Use GAIC
@@ -8670,8 +6920,6 @@ draw_centiles(gamlss_model_weight_boys_weighted.BCCGo.nu1.1, sex = "m", paramete
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
-
 
 ```{r}
 
@@ -8730,9 +6978,6 @@ draw_centiles(gamlss_model_weight_boys_weighted.BCCGo.2, sex = "m", parameter = 
 draw_centiles(gamlss_model_weight_boys_weighted.BCCGo.nu1.2, sex = "m", parameter = "weight", base_model = model_weight_boys_base)
 
 ```
-
-The nu and centiles of the BCPEo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
 
 
 ```{r}
@@ -8910,9 +7155,6 @@ draw_centiles(gamlss_model_weight_boys_weighted.BCCGo.nu1.5, sex = "m", paramete
 ```
 
 
-Increasing the k = logn does not seem to solve the problem of the edge effect of a very high sigma in infancy.
-
-We can try to exclude measurements at age 0 (age day = 0) to try and reduce that edge effect.
 
 ```{r}
 
@@ -8959,11 +7201,6 @@ draw_centiles(gamlss_model_weight_boys_weighted.BCCGo.6, sex = "m", parameter = 
 
 ```
 
-Now the edge effect is away.
-
-The residual diagnostics for both the BCCGo and BCPEo seem very similar.
-
-Take the BCCGo model.
 
 Compare the centiles to those of Swiss 2026.
 
@@ -8992,11 +7229,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_eiholzer_weight <- interpolated_eiholzer_weight |> 
+interpolated_swiss_2026_weight <- interpolated_swiss_2026_weight |> 
   mutate(age_years = age_days/365.25) |>
   filter(age_days <= 6569)
 
-interpolated_eiholzer_weight <- interpolated_eiholzer_weight |> 
+interpolated_swiss_2026_weight <- interpolated_swiss_2026_weight |> 
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -9018,7 +7255,7 @@ LMS_weight_boys <- LMS_weight_boys |>
 
 plot_centiles_weight_boys <- LMS_weight_boys |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
+  bind_rows(interpolated_swiss_2026_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -9027,7 +7264,7 @@ plot_centiles_weight_boys <- LMS_weight_boys |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "weight (kg)",
+  scale_y_continuous(name = "Weight (kg)",
                      limits = c(0, 105), breaks= c(0, 20, 40, 60, 80, 100), expand = c(0,0),
                      #minor_breaks = c(seq(0, 105, by = 1))
                      )+
@@ -9050,7 +7287,7 @@ plot_centiles_weight_boys
 
 plot_centiles_weight_boys_2yr <- LMS_weight_boys |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
+  bind_rows(interpolated_swiss_2026_weight |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -9059,7 +7296,7 @@ plot_centiles_weight_boys_2yr <- LMS_weight_boys |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "weight (kg)",
+  scale_y_continuous(name = "Weight (kg)",
                      limits = c(0, 20), breaks= c(0, 5, 10, 15, 20), expand = c(0,0),
                      #minor_breaks = c(seq(0, 20, by = 1))
                      )+
@@ -9145,8 +7382,7 @@ draw_centiles(model_head_girls_base, sex = "f", parameter = "head", base_model =
 
 ```
 
-A transformation with 0.59 is the power transformation parameter and the BCTo family seems to yield the best fitting centiles.
-However, they seem to be slightly overfitted.
+
 
 ```{r}
 
@@ -9204,9 +7440,6 @@ draw_centiles(gamlss_model_head_girls_weighted.BCCGo.nu1, sex = "f", parameter =
 
 ```
 
-The sigma parameter seems to be overfitted when using the default pb function.
-
-
 Use GAIC
 
 ```{r}
@@ -9226,7 +7459,7 @@ max_k
 gamlss_model_head_girls_weighted.BCTo.1 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=2),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=2),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=2),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -9278,7 +7511,6 @@ draw_centiles(gamlss_model_head_girls_weighted.BCCGo.nu1.1, sex = "f", parameter
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 
 
 ```{r}
@@ -9287,7 +7519,7 @@ Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 gamlss_model_head_girls_weighted.BCTo.2 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=4),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=4),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=4),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -9339,9 +7571,6 @@ draw_centiles(gamlss_model_head_girls_weighted.BCCGo.nu1.2, sex = "f", parameter
 
 ```
 
-The nu and centiles of the BCTo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
-
 
 ```{r}
 
@@ -9349,7 +7578,7 @@ The centiles of the BCCGo nu = 1 seem good.
 gamlss_model_head_girls_weighted.BCTo.3 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=6),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=6),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=6),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -9408,7 +7637,7 @@ draw_centiles(gamlss_model_head_girls_weighted.BCCGo.nu1.3, sex = "f", parameter
 gamlss_model_head_girls_weighted.BCTo.4 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=8),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=8),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=8),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -9466,7 +7695,7 @@ draw_centiles(gamlss_model_head_girls_weighted.BCCGo.nu1.4, sex = "f", parameter
 gamlss_model_head_girls_weighted.BCTo.5 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=max_k),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=max_k),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=max_k),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -9517,10 +7746,6 @@ draw_centiles(gamlss_model_head_girls_weighted.BCCGo.nu1.5, sex = "f", parameter
 
 ```
 
-There seems to be only minimal skewness in the head distribution at all ages.
-The residual diagnostics of the models BCTo and BCCGo seem slightly better, but minimal skewness.
-
-I will therefore choose a model with BCCGo nu = 1.
 
 ```{r}
 
@@ -9571,12 +7796,6 @@ draw_centiles(gamlss_model_head_girls_weighted.BCCGo.nu1.5, sex = "f", parameter
 
 ```
 
-The residual diagnostics for all models seem very similar.
-
-The centiles of the ML model seem slightly overfitted.
-The centiles of all GAIC models seem very similar regardless of k = 2 or k = log n.
-
-Take the k = 4 model.
 
 Compare the centiles to those of Swiss 2026.
 
@@ -9604,11 +7823,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_braegger_head_circumference <- interpolated_braegger_head_circumference |>
+interpolated_swiss_2026_head_circumference <- interpolated_swiss_2026_head_circumference |>
   mutate(age_years = age_days/365.25) |>
   filter(age_days <= 6569)
 
-interpolated_braegger_head_circumference <- interpolated_braegger_head_circumference |>
+interpolated_swiss_2026_head_circumference <- interpolated_swiss_2026_head_circumference |>
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -9630,7 +7849,7 @@ LMS_head_girls <- LMS_head_girls |>
 
 plot_centiles_head_girls <- LMS_head_girls |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_braegger_head_circumference |> mutate(growth_reference = "CH-WHO 2011") |> filter(sex == "f")) |>
+  bind_rows(interpolated_swiss_2026_head_circumference |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -9641,14 +7860,14 @@ plot_centiles_head_girls <- LMS_head_girls |>
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   scale_y_continuous(name = "Head circumference (cm)",
                      limits = c(30, 60), breaks= c(30, 40, 50, 60), expand = c(0,0),
-                     minor_breaks = c(seq(30,60,by =1)))+
+                     #minor_breaks = c(seq(30, 60, by = 1))
+                     )+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0),
-                     minor_breaks = c(seq(0,18,by =1)))+
+                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0))+
   scale_colour_manual(name = NULL,
-                      values = c("CH-WHO 2011" = unibeRed(), "SwissPedGrowth" = "black"))+
+                      values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
-                      values = c("CH-WHO 2011" = "solid", "SwissPedGrowth" = "dashed"))+
+                      values = c("Swiss 2026" = "solid", "SwissPedGrowth" = "dashed"))+
   theme_minimal()+
   theme(axis.title = element_text(size = 8, face = "bold", color = "black"),
         axis.text = element_text(size = 8, color = "black"),
@@ -9660,7 +7879,7 @@ plot_centiles_head_girls
 
 plot_centiles_head_girls_2yr <- LMS_head_girls |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_braegger_head_circumference |> mutate(growth_reference = "CH-WHO 2011") |> filter(sex == "f")) |>
+  bind_rows(interpolated_swiss_2026_head_circumference |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -9671,14 +7890,14 @@ plot_centiles_head_girls_2yr <- LMS_head_girls |>
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   scale_y_continuous(name = "Head circumference (cm)",
                      limits = c(30, 55), breaks= c(30, 40, 50), expand = c(0,0),
-                     minor_breaks = c(seq(30,55,by =1)))+
+                     #minor_breaks = c(seq(30, 55, by = 1))
+                     )+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0),
-                     minor_breaks = c(seq(0,2,by =1)))+
+                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0))+
   scale_colour_manual(name = NULL,
-                      values = c("CH-WHO 2011" = unibeRed(), "SwissPedGrowth" = "black"))+
+                      values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
-                      values = c("CH-WHO 2011" = "solid", "SwissPedGrowth" = "dashed"))+
+                      values = c("Swiss 2026" = "solid", "SwissPedGrowth" = "dashed"))+
   theme_minimal()+
   theme(axis.title = element_text(size = 8, face = "bold", color = "black"),
         axis.text = element_text(size = 8, color = "black"),
@@ -9751,8 +7970,7 @@ draw_centiles(model_head_boys_base, sex = "m", parameter = "head", base_model = 
 
 ```
 
-A transformation with 0.51 is the power transformation parameter and the BCTo family seems to yield the best fitting centiles.
-However, they seem to be slightly overfitted.
+
 
 ```{r}
 
@@ -9810,7 +8028,6 @@ draw_centiles(gamlss_model_head_boys_weighted.BCCGo.nu1, sex = "m", parameter = 
 
 ```
 
-The sigma parameter seems to be overfitted when using the default pb function.
 
 
 Use GAIC
@@ -9832,7 +8049,7 @@ max_k
 gamlss_model_head_boys_weighted.BCTo.1 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=2),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=2),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=2),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -9884,7 +8101,6 @@ draw_centiles(gamlss_model_head_boys_weighted.BCCGo.nu1.1, sex = "m", parameter 
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 
 
 ```{r}
@@ -9893,7 +8109,7 @@ Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 gamlss_model_head_boys_weighted.BCTo.2 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=4),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=4),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=4),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -9945,8 +8161,6 @@ draw_centiles(gamlss_model_head_boys_weighted.BCCGo.nu1.2, sex = "m", parameter 
 
 ```
 
-The nu and centiles of the BCTo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
 
 
 ```{r}
@@ -9955,7 +8169,7 @@ The centiles of the BCCGo nu = 1 seem good.
 gamlss_model_head_boys_weighted.BCTo.3 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=6),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=6),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=6),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10014,7 +8228,7 @@ draw_centiles(gamlss_model_head_boys_weighted.BCCGo.nu1.3, sex = "m", parameter 
 gamlss_model_head_boys_weighted.BCTo.4 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=8),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=8),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=8),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10072,7 +8286,7 @@ draw_centiles(gamlss_model_head_boys_weighted.BCCGo.nu1.4, sex = "m", parameter 
 gamlss_model_head_boys_weighted.BCTo.5 <- gamlss(head_cm ~ pbm(age_days_circumference_trans, method="GAIC", k=max_k),
                                           sigma.formula = ~pb(age_days_circumference_trans, method="GAIC", k=max_k),
                                           nu.formula = ~pb(age_days_circumference_trans, method="GAIC", k=max_k),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_head_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10123,10 +8337,6 @@ draw_centiles(gamlss_model_head_boys_weighted.BCCGo.nu1.5, sex = "m", parameter 
 
 ```
 
-There seems to be only minimal skewness in the head distribution at all ages.
-The residual diagnostics of the models BCTo and BCCGo seem slightly better, but minimal skewness.
-
-I will therefore choose a model with BCCGo nu = 1.
 
 ```{r}
 #| warning: false
@@ -10178,12 +8388,6 @@ draw_centiles(gamlss_model_head_boys_weighted.BCCGo.nu1.5, sex = "m", parameter 
 
 ```
 
-The residual diagnostics for all models seem very similar.
-
-The centiles of the ML model seem slightly overfitted.
-The centiles up to k = 6 seem to have an unrealistic edge effect
-
-Take the k = 8 model.
 
 Compare the centiles to those of CH-WHO 2011.
 
@@ -10212,11 +8416,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_braegger_head_circumference <- interpolated_braegger_head_circumference |>
+interpolated_swiss_2026_head_circumference <- interpolated_swiss_2026_head_circumference |>
   mutate(age_years = age_days/365.25) |>
   filter(age_days <= 6569)
 
-interpolated_braegger_head_circumference <- interpolated_braegger_head_circumference |>
+interpolated_swiss_2026_head_circumference <- interpolated_swiss_2026_head_circumference |>
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -10238,7 +8442,7 @@ LMS_head_boys <- LMS_head_boys |>
 
 plot_centiles_head_boys <- LMS_head_boys |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_braegger_head_circumference |> mutate(growth_reference = "CH-WHO 2011") |> filter(sex == "m")) |>
+  bind_rows(interpolated_swiss_2026_head_circumference |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -10256,9 +8460,9 @@ plot_centiles_head_boys <- LMS_head_boys |>
                      #minor_breaks = c(seq(0,18, by =1))
                      )+
   scale_colour_manual(name = NULL,
-                      values = c("CH-WHO 2011" = unibeRed(), "SwissPedGrowth" = "black"))+
+                      values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
-                      values = c("CH-WHO 2011" = "solid", "SwissPedGrowth" = "dashed"))+
+                      values = c("Swiss 2026" = "solid", "SwissPedGrowth" = "dashed"))+
   theme_minimal()+
   theme(axis.title = element_text(size = 8, face = "bold", color = "black"),
         axis.text = element_text(size = 8, color = "black"),
@@ -10270,7 +8474,7 @@ plot_centiles_head_boys
 
 plot_centiles_head_boys_2yr <- LMS_head_boys |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_braegger_head_circumference |> mutate(growth_reference = "CH-WHO 2011") |> filter(sex == "m")) |>
+  bind_rows(interpolated_swiss_2026_head_circumference |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -10288,9 +8492,9 @@ plot_centiles_head_boys_2yr <- LMS_head_boys |>
                      #minor_breaks = c(seq(0,2, by =1))
                      )+
   scale_colour_manual(name = NULL,
-                      values = c("CH-WHO 2011" = unibeRed(), "SwissPedGrowth" = "black"))+
+                      values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
-                      values = c("CH-WHO 2011" = "solid", "SwissPedGrowth" = "dashed"))+
+                      values = c("Swiss 2026" = "solid", "SwissPedGrowth" = "dashed"))+
   theme_minimal()+
   theme(axis.title = element_text(size = 8, face = "bold", color = "black"),
         axis.text = element_text(size = 8, color = "black"),
@@ -10313,9 +8517,6 @@ wp(gamlss_model_head_boys_weighted.BCCGo.nu1.4,
 dev.off()
 
 ```
-
-
-
 
 
 
@@ -10369,8 +8570,7 @@ draw_centiles(model_bmi_girls_base, sex = "f", parameter = "bmi", base_model = m
 
 ```
 
-A transformation with 0.59 is the power transformation parameter and the BCPEo family seems to yield the best fitting centiles.
-However, they seem to be slightly overfitted.
+
 
 ```{r}
 
@@ -10428,8 +8628,6 @@ draw_centiles(gamlss_model_bmi_girls_weighted.BCCGo.nu1, sex = "f", parameter = 
 
 ```
 
-The sigma parameter seems to be overfitted when using the default pb function.
-
 
 Use GAIC
 
@@ -10450,7 +8648,7 @@ max_k
 gamlss_model_bmi_girls_weighted.BCPEo.1 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=2),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=2),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=2),
-                                          family = BCCGo,
+                                          family = BCPEo,
                                           data = data_bmi_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10502,7 +8700,6 @@ draw_centiles(gamlss_model_bmi_girls_weighted.BCCGo.nu1.1, sex = "f", parameter 
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 
 
 ```{r}
@@ -10511,7 +8708,7 @@ Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 gamlss_model_bmi_girls_weighted.BCPEo.2 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=4),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=4),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=4),
-                                          family = BCCGo,
+                                          family = BCPEo,
                                           data = data_bmi_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10563,9 +8760,6 @@ draw_centiles(gamlss_model_bmi_girls_weighted.BCCGo.nu1.2, sex = "f", parameter 
 
 ```
 
-The nu and centiles of the BCPEo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
-
 
 ```{r}
 
@@ -10573,7 +8767,7 @@ The centiles of the BCCGo nu = 1 seem good.
 gamlss_model_bmi_girls_weighted.BCPEo.3 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=6),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=6),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=6),
-                                          family = BCCGo,
+                                          family = BCPEo,
                                           data = data_bmi_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10632,7 +8826,7 @@ draw_centiles(gamlss_model_bmi_girls_weighted.BCCGo.nu1.3, sex = "f", parameter 
 gamlss_model_bmi_girls_weighted.BCPEo.4 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=8),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=8),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=8),
-                                          family = BCCGo,
+                                          family = BCPEo,
                                           data = data_bmi_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10690,7 +8884,7 @@ draw_centiles(gamlss_model_bmi_girls_weighted.BCCGo.nu1.4, sex = "f", parameter 
 gamlss_model_bmi_girls_weighted.BCPEo.5 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=10),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=10),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=10),
-                                          family = BCCGo,
+                                          family = BCPEo,
                                           data = data_bmi_pop2_gamlss_girls,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -10741,21 +8935,16 @@ draw_centiles(gamlss_model_bmi_girls_weighted.BCCGo.nu1.5, sex = "f", parameter 
 
 ```
 
-The centiles of the ML model seem slightly overfitted.
-The centiles of all GAIC models seem very similar regardless of k = 2 or k = log n.
-
-Take the k = 10 model.
-
-Compare the centiles to those of Eiholzer.
+Compare the centiles to those of swiss_2026.
 
 Predict LMS
 
 ```{r}
-LMS_bmi_girls <- data.frame(age_days_bmi = 0:6569) |> 
+LMS_bmi_girls <- data.frame(age_days_bmi = 0:6575) |> 
   mutate(age_days_bmi_trans = age_days_bmi^model_bmi_girls_base$power)
 
 LMS_bmi_girls <- data.frame(predictAll(gamlss_model_bmi_girls_weighted.BCCGo.5, type = "response", newdata = LMS_bmi_girls),
-                               age_days_bmi = 0:6569) |> 
+                               age_days_bmi = 0:6575) |> 
   rename("M" = "mu", "S" = "sigma", "L" = "nu", "age_days" = "age_days_bmi")
 
 ```
@@ -10772,11 +8961,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_eiholzer_bmi <- interpolated_eiholzer_bmi |>
+interpolated_swiss_2026_bmi <- interpolated_swiss_2026_bmi |>
   mutate(age_years = age_days/365.25) |>
-  filter(age_days <= 6569)
+  filter(age_days <= 6575)
 
-interpolated_eiholzer_bmi <- interpolated_eiholzer_bmi |>
+interpolated_swiss_2026_bmi <- interpolated_swiss_2026_bmi |>
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -10798,7 +8987,7 @@ LMS_bmi_girls <- LMS_bmi_girls |>
 
 plot_centiles_bmi_girls <- LMS_bmi_girls |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_eiholzer_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
+  bind_rows(interpolated_swiss_2026_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -10807,12 +8996,12 @@ plot_centiles_bmi_girls <- LMS_bmi_girls |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "Body mass index (kg/m2)",
+  scale_y_continuous(name = (bquote(bold(BMI~(kg/m^2)))),
                      limits = c(10, 35), breaks= c(10, 20, 30), expand = c(0,0),
-                     minor_breaks = c(seq(10,35, by = 1)))+
+                     #minor_breaks = c(seq(10, 35, by = 1))
+                     )+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0),
-                     minor_breaks = c(seq(0,18, by = 1)))+
+                     limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0))+
   scale_colour_manual(name = NULL,
                       values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
@@ -10828,7 +9017,7 @@ plot_centiles_bmi_girls
 
 plot_centiles_bmi_girls_2yr <- LMS_bmi_girls |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_eiholzer_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
+  bind_rows(interpolated_swiss_2026_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -10837,12 +9026,12 @@ plot_centiles_bmi_girls_2yr <- LMS_bmi_girls |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "Body mass index (kg/m2)",
-                     limits = c(10, 20), breaks= c(10, 15, 20), expand = c(0,0),
-                     minor_breaks = c(seq(10,20, by = 1)))+
+  scale_y_continuous(name = (bquote(bold(BMI~(kg/m^2)))),
+                     limits = c(10, 25), breaks= c(10, 15, 20, 25), expand = c(0,0),
+                     #minor_breaks = c(seq(10, 25, by = 1))
+                     )+
   scale_x_continuous(name = "Age (years)",
-                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0),
-                     minor_breaks = c(seq(0,2, by = 1)))+
+                     limits = c(0, 2), breaks = c(0, 0.5, 1, 1.5, 2), expand = c(0,0))+
   scale_colour_manual(name = NULL,
                       values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
@@ -10919,8 +9108,7 @@ draw_centiles(model_bmi_boys_base, sex = "f", parameter = "bmi", base_model = mo
 
 ```
 
-A transformation with 0.29 is the power transformation parameter and the BCPEo family seems to yield the best fitting centiles.
-However, they seem to be slightly overfitted.
+
 
 ```{r}
 
@@ -10978,8 +9166,6 @@ draw_centiles(gamlss_model_bmi_boys_weighted.BCCGo.nu1, sex = "f", parameter = "
 
 ```
 
-The sigma parameter seems to be overfitted when using the default pb function.
-
 
 Use GAIC
 
@@ -11000,7 +9186,7 @@ max_k
 gamlss_model_bmi_boys_weighted.BCTo.1 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=2),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=2),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=2),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_bmi_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -11052,7 +9238,6 @@ draw_centiles(gamlss_model_bmi_boys_weighted.BCCGo.nu1.1, sex = "f", parameter =
 
 ```
 
-Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 
 
 ```{r}
@@ -11061,7 +9246,7 @@ Now, the nu parameter seems overfitted when using "GAIC" and k = 2.
 gamlss_model_bmi_boys_weighted.BCTo.2 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=4),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=4),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=4),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_bmi_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -11113,8 +9298,6 @@ draw_centiles(gamlss_model_bmi_boys_weighted.BCCGo.nu1.2, sex = "f", parameter =
 
 ```
 
-The nu and centiles of the BCTo and BCCGo look slightly overfitted when using "GAIC" and k = 4.
-The centiles of the BCCGo nu = 1 seem good.
 
 
 ```{r}
@@ -11123,7 +9306,7 @@ The centiles of the BCCGo nu = 1 seem good.
 gamlss_model_bmi_boys_weighted.BCTo.3 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=6),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=6),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=6),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_bmi_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -11182,7 +9365,7 @@ draw_centiles(gamlss_model_bmi_boys_weighted.BCCGo.nu1.3, sex = "f", parameter =
 gamlss_model_bmi_boys_weighted.BCTo.4 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=8),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=8),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=8),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_bmi_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -11240,7 +9423,7 @@ draw_centiles(gamlss_model_bmi_boys_weighted.BCCGo.nu1.4, sex = "f", parameter =
 gamlss_model_bmi_boys_weighted.BCTo.5 <- gamlss(bmi ~ pb(age_days_bmi_trans, method="GAIC", k=10),
                                           sigma.formula = ~pb(age_days_bmi_trans, method="GAIC", k=10),
                                           nu.formula = ~pb(age_days_bmi_trans, method="GAIC", k=10),
-                                          family = BCCGo,
+                                          family = BCTo,
                                           data = data_bmi_pop2_gamlss_boys,
                                           weights = stabilized_genpop_analysis_weight)
 
@@ -11291,12 +9474,8 @@ draw_centiles(gamlss_model_bmi_boys_weighted.BCCGo.nu1.5, sex = "f", parameter =
 
 ```
 
-The centiles of the ML model seem slightly overfitted.
-The centiles of all GAIC models seem very similar regardless of k = 2 or k = log n.
 
-Take the k = 6 model.
-
-Compare the centiles to those of Eiholzer.
+Compare the centiles to those of swiss_2026.
 
 Predict LMS
 
@@ -11322,11 +9501,11 @@ z_score_centile_90 <- qnorm(0.9)
 z_score_centile_97 <- qnorm(0.97)
 
 
-interpolated_eiholzer_bmi <- interpolated_eiholzer_bmi |>
+interpolated_swiss_2026_bmi <- interpolated_swiss_2026_bmi |>
   mutate(age_years = age_days/365.25) |>
   filter(age_days <= 6569)
 
-interpolated_eiholzer_bmi <- interpolated_eiholzer_bmi |>
+interpolated_swiss_2026_bmi <- interpolated_swiss_2026_bmi |>
   mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
          centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
          centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
@@ -11348,7 +9527,7 @@ LMS_bmi_boys <- LMS_bmi_boys |>
 
 plot_centiles_bmi_boys <- LMS_bmi_boys |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_eiholzer_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |>
+  bind_rows(interpolated_swiss_2026_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "m")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -11357,7 +9536,7 @@ plot_centiles_bmi_boys <- LMS_bmi_boys |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "Body mass index (kg/m2)",
+  scale_y_continuous(name = (bquote(bold(BMI~(kg/m^2)))),
                      limits = c(10, 35), breaks= c(10, 20, 30), expand = c(0,0),
                      #minor_breaks = c(seq(10,35, by =1))
                      )+
@@ -11380,7 +9559,7 @@ plot_centiles_bmi_boys
 
 plot_centiles_bmi_boys_2yr <- LMS_bmi_boys |>
   mutate(growth_reference = "SwissPedGrowth") |>
-  bind_rows(interpolated_eiholzer_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
+  bind_rows(interpolated_swiss_2026_bmi |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |>
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -11389,7 +9568,7 @@ plot_centiles_bmi_boys_2yr <- LMS_bmi_boys |>
   geom_line(aes(y = centile_75, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_90, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_97, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
-  scale_y_continuous(name = "Body mass index (kg/m2)",
+  scale_y_continuous(name = (bquote(bold(BMI~(kg/m^2)))),
                      limits = c(10, 25), breaks= c(10, 15, 20, 25), expand = c(0,0),
                      #minor_breaks = c(seq(10,25, by =1))
                      )+
@@ -11432,24 +9611,11 @@ dev.off()
 ```{r}
 
 
-interpolated_braegger_height <- interpolated_braegger_height |> 
-  mutate(age_years = age_days/365.25) |>
-  filter(age_days <= 6569)
-
-interpolated_braegger_height <- interpolated_braegger_height |> 
-  mutate(centile_3 = M * (1 + L * S * z_score_centile_3)^(1 / L),
-         centile_10 = M * (1 + L * S * z_score_centile_10)^(1 / L),
-         centile_25 = M * (1 + L * S * z_score_centile_25)^(1 / L),
-         centile_50 = M * (1 + L * S * z_score_centile_50)^(1 / L),
-         centile_75 = M * (1 + L * S * z_score_centile_75)^(1 / L),
-         centile_90 = M * (1 + L * S * z_score_centile_90)^(1 / L),
-         centile_97 = M * (1 + L * S * z_score_centile_97)^(1 / L))
 
 
 plot_legend <- LMS_height_girls |> 
   mutate(growth_reference = "SwissPedGrowth") |> 
-  bind_rows(interpolated_eiholzer_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
-  bind_rows(interpolated_braegger_height |> mutate(growth_reference = "CH-WHO 2011") |> filter(sex == "f")) |> 
+  bind_rows(interpolated_swiss_2026_height |> mutate(growth_reference = "Swiss 2026") |> filter(sex == "f")) |> 
   ggplot(aes(x = age_years)) +
   geom_line(aes(y = centile_3, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
   geom_line(aes(y = centile_10, colour = growth_reference, linetype = growth_reference), linewidth = 0.5)+
@@ -11463,9 +9629,9 @@ plot_legend <- LMS_height_girls |>
   scale_x_continuous(name = "Age (years)",
                      limits = c(0, 18), breaks = c(0, 6, 12, 18), expand = c(0,0))+
   scale_colour_manual(name = NULL,
-                      values = c("Swiss 2026" = unibeMint(), "CH-WHO 2011" = unibeRed(), "SwissPedGrowth" = "black"))+
+                      values = c("Swiss 2026" = unibeMint(), "SwissPedGrowth" = "black"))+
   scale_linetype_manual(name = NULL,
-                      values = c("Swiss 2026" = "solid", "CH-WHO 2011" = "solid", "SwissPedGrowth" = "dashed"))+
+                      values = c("Swiss 2026" = "solid", "SwissPedGrowth" = "dashed"))+
   theme_minimal()+
   theme(axis.title = element_text(size = 8, face = "bold", color = "black"),
         axis.text = element_text(size = 8, color = "black"),
