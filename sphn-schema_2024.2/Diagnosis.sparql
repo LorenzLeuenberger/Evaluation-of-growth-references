@@ -1,0 +1,28 @@
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX snomed: <http://snomed.info/id/>
+PREFIX sphn: <https://biomedit.ch/rdf/sphn-schema/sphn#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX oboInOwl: <http://www.geneontology.org/formats/oboInOwl#>
+
+SELECT ?Diagnosis ?SubjectPseudoIdentifier_Identifier ?DataProvider_InstitutionCode_Name ?AdministrativeCase ?AdministrativeCase_Identifier ?RecordDateTime ?Code
+
+ (SAMPLE(?Code_Labels) AS ?Code_Label) 
+    (SAMPLE(?Code_DbXrefs) AS ?Code_DbXref)
+WHERE {
+	?Diagnosis a sphn:Diagnosis .
+	OPTIONAL { ?Diagnosis sphn:hasSubjectPseudoIdentifier ?SubjectPseudoIdentifier.
+       		Optional { ?SubjectPseudoIdentifier sphn:hasIdentifier ?SubjectPseudoIdentifier_Identifier . }
+    		OPTIONAL { ?SubjectPseudoIdentifier sphn:hasDataProvider/sphn:hasInstitutionCode/sphn:hasName ?DataProvider_InstitutionCode_Name .}}
+    OPTIONAL { ?Diagnosis sphn:hasAdministrativeCase ?AdministrativeCase .
+        Optional {?AdministrativeCase sphn:hasIdentifier ?AdministrativeCase_Identifier . }}
+    OPTIONAL { ?Diagnosis sphn:hasRecordDateTime ?RecordDateTime . }
+    OPTIONAL { ?Diagnosis sphn:hasCode/rdf:type ?Code . 
+        FILTER(?Code != sphn:Code)
+        OPTIONAL { ?Code rdfs:label ?Code_Labels . 
+            FILTER(!STRSTARTS(LCASE(STR(?Code_Labels)), "obsolete"))}
+        OPTIONAL { ?Code oboInOwl:hasDbXref ?Code_DbXrefs . 
+            FILTER(STRSTARTS(LCASE(STR(?Code_DbXrefs)), "icd"))}
+	}
+}
+GROUP BY ?Diagnosis ?SubjectPseudoIdentifier_Identifier ?DataProvider_InstitutionCode_Name ?AdministrativeCase ?AdministrativeCase_Identifier ?RecordDateTime ?Code

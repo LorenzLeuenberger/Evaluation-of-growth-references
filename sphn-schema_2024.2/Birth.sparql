@@ -1,0 +1,32 @@
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX snomed: <http://snomed.info/id/>
+PREFIX sphn: <https://biomedit.ch/rdf/sphn-schema/sphn#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?Birth ?SubjectPseudoIdentifier_Identifier ?AdministrativeCase_Identifier ?Year ?Month ?Day	?DeliveryModeCode ?GestationalAge_Quantity_Value ?GestationalAge_Quantity_Unit
+WHERE {
+    	?Birth a sphn:Birth .
+        optional { ?Birth sphn:hasSubjectPseudoIdentifier/sphn:hasIdentifier ?SubjectPseudoIdentifier_Identifier . }
+    	optional { ?Birth sphn:hasAdministrativeCase/sphn:hasIdentifier ?AdministrativeCase_Identifier . }
+        optional { ?Birth sphn:hasDate/sphn:hasYear ?Year . }
+        optional { ?Birth sphn:hasDate/sphn:hasMonth ?Month . }
+        optional { ?Birth sphn:hasDate/sphn:hasDay ?Day . }
+   		optional { ?Birth sphn:hasDeliveryModeCode/rdf:type ?DeliveryModeCode_Type .
+        			optional {?DeliveryModeCode_Type skos:prefLabel ?DeliveryModeCode_german . 
+        						FILTER(LANG(?DeliveryModeCode_german) = "de")}
+    				optional { ?DeliveryModeCode_Type skos:prefLabel ?DeliveryModeCode_english . 
+        						FILTER(LANG(?DeliveryModeCode_english) = "en")}
+    				optional { ?DeliveryModeCode_Type skos:prefLabel ?DeliveryModeCode_englishUS . 
+        						FILTER(LANG(?DeliveryModeCode_englishUS) = "en-US")}
+    				optional { ?DeliveryModeCode_Type skos:prefLabel ?DeliveryModeCode_englishUK . 
+        						FILTER(LANG(?DeliveryModeCode_englishUK) = "en-UK")}
+    				optional { ?DeliveryModeCode_Type skos:prefLabel ?DeliveryModeCode_french . 
+        						FILTER(LANG(?DeliveryModeCode_french) = "fr")}
+    				optional { ?DeliveryModeCode_Type skos:prefLabel ?DeliveryModeCode_frenchCH . 
+        						FILTER(LANG(?DeliveryModeCode_frenchCH) = "fr-CH")}
+    				BIND(COALESCE(?DeliveryModeCode_german, ?DeliveryModeCode_english, ?DeliveryModeCode_englishUS, ?DeliveryModeCode_englishUK, ?DeliveryModeCode_french, ?DeliveryModeCode_frenchCH) AS ?DeliveryModeCode)}
+    	optional { ?Birth sphn:hasGestationalAge/sphn:hasQuantity ?GestationalAge_Quantity .
+        			optional { ?GestationalAge_Quantity sphn:hasValue ?GestationalAge_Quantity_Value . }
+        			optional { ?GestationalAge_Quantity sphn:hasUnit/sphn:hasCode/rdf:type/rdfs:label ?GestationalAge_Quantity_Unit . }}
+}

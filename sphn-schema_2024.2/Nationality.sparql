@@ -1,0 +1,28 @@
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX snomed: <http://snomed.info/id/>
+PREFIX sphn: <https://biomedit.ch/rdf/sphn-schema/sphn#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?Nationality ?SubjectPseudoIdentifier_Identifier ?DataProvider_InstitutionCode_Name ?AssociatedCountry_Code_Label
+WHERE {
+    	?Nationality a sphn:Nationality .
+    OPTIONAL { ?Nationality sphn:hasSubjectPseudoIdentifier ?SubjectPseudoIdentifier.
+        Optional { ?SubjectPseudoIdentifier sphn:hasIdentifier ?SubjectPseudoIdentifier_Identifier . }
+    	OPTIONAL { ?SubjectPseudoIdentifier sphn:hasDataProvider/sphn:hasInstitutionCode/sphn:hasName ?DataProvider_InstitutionCode_Name . }}
+        optional { ?Nationality sphn:hasRecordDateTime ?RecordDateTime . }
+        optional { ?Nationality sphn:hasAssociatedCountry/sphn:hasCode/rdf:type ?AssociatedCountry_Code_Type .
+        			optional { ?AssociatedCountry_Code_Type skos:prefLabel ?AssociatedCountry_Code_Label_german .
+        						FILTER(LANG(?AssociatedCountry_Code_Label_german) = "de")}
+        			optional { ?AssociatedCountry_Code_Type skos:prefLabel ?AssociatedCountry_Code_Label_english .
+            					FILTER(LANG(?AssociatedCountry_Code_Label_english) = "en")}
+        			optional { ?AssociatedCountry_Code_Type skos:prefLabel ?AssociatedCountry_Code_Label_englishUS .
+        						FILTER(LANG(?AssociatedCountry_Code_Label_englishUS) = "en-US")}
+        			optional { ?AssociatedCountry_Code_Type skos:prefLabel ?AssociatedCountry_Code_Label_englishUK .
+        						FILTER(LANG(?AssociatedCountry_Code_Label_englishUK) = "en-UK")}
+        			optional { ?AssociatedCountry_Code_Type skos:prefLabel ?AssociatedCountry_Code_Label_french .
+        						FILTER(LANG(?AssociatedCountry_Code_Label_french) = "fr")}
+        			optional { ?AssociatedCountry_Code_Type skos:prefLabel ?AssociatedCountry_Code_Label_frenchCH .
+                				FILTER(LANG(?AssociatedCountry_Code_Label_frenchCH) = "fr-CH")}
+        			BIND(COALESCE(?AssociatedCountry_Code_Label_german, ?AssociatedCountry_Code_Label_english, ?AssociatedCountry_Code_Label_englishUS, ?AssociatedCountry_Code_Label_englishUK, ?AssociatedCountry_Code_Label_french, ?AssociatedCountry_Code_Label_frenchCH) AS ?AssociatedCountry_Code_Label)}
+}

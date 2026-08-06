@@ -1,0 +1,32 @@
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX snomed: <http://snomed.info/id/>
+PREFIX sphn: <https://biomedit.ch/rdf/sphn-schema/sphn#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?HomeAddress ?SubjectPseudoIdentifier_Identifier ?Country_Code_Label ?SwissSocioEconomicPosition_Value ?SwissSocioEconomicPosition_Version ?SwissSocioEconomicPosition_Distance_Value ?SwissSocioEconomicPosition_Distance_Unit
+WHERE {
+    	?HomeAddress a sphn:HomeAddress .
+        optional { ?HomeAddress sphn:hasSubjectPseudoIdentifier/sphn:hasIdentifier ?SubjectPseudoIdentifier_Identifier . }
+     	optional { ?HomeAddress sphn:hasCountry/sphn:hasCode/rdf:type ?Country_Code_Type .
+        			optional { ?Country_Code_Type skos:prefLabel ?Country_Code_Label_german . 
+        						FILTER(LANG(?Country_Code_Label_german) = "de")}
+    				optional { ?Country_Code_Type skos:prefLabel ?Country_Code_Label_english . 
+        						FILTER(LANG(?Country_Code_Label_english) = "en")}
+    				optional { ?Country_Code_Type skos:prefLabel ?Country_Code_Label_englishUS . 
+        						FILTER(LANG(?Country_Code_Label_englishUS) = "en-US")}
+    				optional { ?Country_Code_Type skos:prefLabel ?Country_Code_Label_englishUK . 
+        						FILTER(LANG(?Country_Code_Label_englishUK) = "en-UK")}
+    				optional { ?Country_Code_Type skos:prefLabel ?Country_Code__Label_french . 
+        						FILTER(LANG(?Country_Code__Label_french) = "fr")}
+    				optional { ?Country_Code_Type skos:prefLabel ?Country_Code_Label_frenchCH . 
+        						FILTER(LANG(?Country_Code_Label_frenchCH) = "fr-CH")}
+        			BIND(COALESCE(?Country_Code_Label_german, ?Country_Code_Label_english, ?Country_Code_Label_englishUS, ?Country_Code_Label_englishUK, ?Country_Code__Label_french, ?Country_Code_Label_frenchCH) AS ?Country_Code_Label)}
+    	optional { ?HomeAddress sphn:hasSwissSocioEconomicPosition ?SwissSocioEconomicPosition . 
+        			optional { ?SwissSocioEconomicPosition sphn:hasValue ?SwissSocioEconomicPosition_Value . }
+    				optional { ?SwissSocioEconomicPosition sphn:hasVersion ?SwissSocioEconomicPosition_Version . }
+    				optional { ?SwissSocioEconomicPosition sphn:hasDistance ?SwissSocioEconomicPosition_Distance .
+            					optional { ?SwissSocioEconomicPosition_Distance sphn:hasValue ?SwissSocioEconomicPosition_Distance_Value . }
+        						optional { ?SwissSocioEconomicPosition_Distance sphn:hasUnit/sphn:hasCode/rdf:type/rdfs:label ?SwissSocioEconomicPosition_Distance_Unit .}}
+				}
+}

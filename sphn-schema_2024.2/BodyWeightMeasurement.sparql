@@ -1,0 +1,21 @@
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX sphn: <https://biomedit.ch/rdf/sphn-schema/sphn#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+
+SELECT ?BodyWeightMeasurement ?SubjectPseudoIdentifier_Identifier ?DataProvider_InstitutionCode_Name ?AdministrativeCase ?AdministrativeCase_Identifier ?StartDateTime ?EndDateTime ?Result_Quantity_Value ?Result_Quantity_Unit ?Result_DateTime
+
+WHERE {
+	    ?BodyWeightMeasurement a sphn:BodyWeightMeasurement .
+   		OPTIONAL { ?BodyWeightMeasurement sphn:hasSubjectPseudoIdentifier ?SubjectPseudoIdentifier.
+       		Optional { ?SubjectPseudoIdentifier sphn:hasIdentifier ?SubjectPseudoIdentifier_Identifier . }
+    		OPTIONAL { ?SubjectPseudoIdentifier sphn:hasDataProvider/sphn:hasInstitutionCode/sphn:hasName ?DataProvider_InstitutionCode_Name .}}
+    	optional { ?BodyWeightMeasurement sphn:hasAdministrativeCase ?AdministrativeCase . 
+        	optional { ?AdministrativeCase sphn:hasIdentifier ?AdministrativeCase_Identifier . }}
+        optional { ?BodyWeightMeasurement sphn:hasStartDateTime ?StartDateTime . }
+        optional { ?BodyWeightMeasurement sphn:hasEndDateTime ?EndDateTime . }
+    	optional { ?BodyWeightMeasurement sphn:hasResult ?Result .
+        			optional { ?Result sphn:hasQuantity ?Result_Quantity .
+        						optional { ?Result_Quantity sphn:hasValue ?Result_Quantity_Value. }
+    							optional { ?Result_Quantity sphn:hasUnit/sphn:hasCode/rdf:type/rdfs:label ?Result_Quantity_Unit. }}
+        			optional { ?Result sphn:hasDateTime ?Result_DateTime}}
+}

@@ -1,0 +1,12 @@
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX snomed: <http://snomed.info/id/>
+PREFIX sphn: <https://biomedit.ch/rdf/sphn-schema/sphn#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT *
+WHERE {
+    	?SubjectPseudoIdentifier a sphn:SubjectPseudoIdentifier .
+    	optional { ?SubjectPseudoIdentifier sphn:hasIdentifier ?Identifier . }
+        optional { ?SubjectPseudoIdentifier sphn:hasDataProvider/sphn:hasInstitutionCode/sphn:hasName ?DataProvider_InstitutionCode_Name }
+}
