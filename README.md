@@ -1,4 +1,4 @@
-# Growth references - SwissPedGrowth
+# Growth References in SwissPedGrowth
 
 This GitHub repository shares the analysis code used for the manuscript "Evaluating growth references in children visiting Swiss paediatric hospitals: A cross-sectional analysis of the SwissPedGrowth project".
 
